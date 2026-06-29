@@ -1,0 +1,6 @@
+{
+  "name": "Workout Planner",
+  "description": "An advanced, fully customizable workout planner and progress tracker for strength training and bodybuilding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
