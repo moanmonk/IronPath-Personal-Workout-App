@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000 --hostname 0.0.0.0",
-    "build": "next build && rm -rf dist && mv out dist",
+    "build": "next build && ( [ -n \"$VERCEL\" ] && echo 'Building on Vercel' || (rm -rf dist && mv out dist) )",
     "clean": "rm -rf .next .next-dev out dist",
     "lint": "tsc --noEmit"
   },
