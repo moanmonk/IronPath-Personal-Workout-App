@@ -204,7 +204,7 @@ function findGroupForExercise(name: string): string {
   return "Custom";
 }
 
-const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const ALL_DAYS = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
 const DAY_TYPES = [
   "Push",
   "Pull",
@@ -337,15 +337,38 @@ export default function WorkoutPlanner() {
   }
   const [logIn, setLogIn] = useState<{ sets: LogInSet[] }>({ sets: [] });
 
+  const sortPlanByDays = (p: any[]) => {
+    return [...p].sort((a, b) => ALL_DAYS.indexOf(a.day) - ALL_DAYS.indexOf(b.day));
+  };
+
   // Load from browser localStorage safely
   useEffect(() => {
     const savedPlan = localStorage.getItem("wp-plan");
     const savedProgress = localStorage.getItem("wp-progress");
     const savedChecked = localStorage.getItem("wp-checked");
+    const savedLastDate = localStorage.getItem("wp-last-checked-date");
 
-    setPlan(savedPlan ? JSON.parse(savedPlan) : defaultPlan);
+    const todayStr = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+
+    const initialPlan = savedPlan ? JSON.parse(savedPlan) : defaultPlan;
+    const sortedPlan = sortPlanByDays(initialPlan);
+
+    setPlan(sortedPlan);
     setProgress(savedProgress ? JSON.parse(savedProgress) : {});
-    setChecked(savedChecked ? JSON.parse(savedChecked) : {});
+
+    if (savedLastDate && savedLastDate !== todayStr) {
+      // It's a new day! Clear the checked status
+      setChecked({});
+      localStorage.setItem("wp-checked", JSON.stringify({}));
+      localStorage.setItem("wp-last-checked-date", todayStr);
+    } else {
+      setChecked(savedChecked ? JSON.parse(savedChecked) : {});
+      localStorage.setItem("wp-last-checked-date", todayStr);
+    }
     setMounted(true);
   }, []);
 
@@ -355,13 +378,20 @@ export default function WorkoutPlanner() {
   };
 
   const updatePlan = (newPlan: any[]) => {
-    setPlan(newPlan);
-    localStorage.setItem("wp-plan", JSON.stringify(newPlan));
+    const sorted = sortPlanByDays(newPlan);
+    setPlan(sorted);
+    localStorage.setItem("wp-plan", JSON.stringify(sorted));
   };
 
   const updateChecked = (newChecked: Record<string, boolean>) => {
     setChecked(newChecked);
     localStorage.setItem("wp-checked", JSON.stringify(newChecked));
+    const todayStr = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+    localStorage.setItem("wp-last-checked-date", todayStr);
   };
 
   const updateProgress = (newProgress: Record<string, any>) => {
@@ -563,6 +593,7 @@ export default function WorkoutPlanner() {
     const accents = ["#ff6b54", "#5490ff", "#3dc97d", "#b55fff", "#f5b94e", "#ff5490", "#4ffff0"];
     const ci = (plan?.length || 0) % colors.length;
 
+    const activeDayCode = plan[activeDay]?.day;
     const updated = [
       ...plan,
       {
@@ -574,7 +605,17 @@ export default function WorkoutPlanner() {
         exercises: []
       }
     ];
-    updatePlan(updated);
+    const sorted = sortPlanByDays(updated);
+    updatePlan(sorted);
+
+    // Find where the active day went
+    const newActiveIdx = sorted.findIndex((d) => d.day === activeDayCode);
+    if (newActiveIdx !== -1) {
+      setActiveDay(newActiveIdx);
+    } else {
+      const addedIdx = sorted.findIndex((d) => d.day === dayLabel);
+      if (addedIdx !== -1) setActiveDay(addedIdx);
+    }
     showToast(`${dayLabel} — ${dayType} added`);
   };
 
@@ -586,8 +627,18 @@ export default function WorkoutPlanner() {
   };
 
   const moveDay = (di: number, newDayLabel: string) => {
+    const activeDayCode = plan[activeDay]?.day;
     const updated = plan.map((d, i) => (i !== di ? d : { ...d, day: newDayLabel }));
-    updatePlan(updated);
+    const sorted = sortPlanByDays(updated);
+    updatePlan(sorted);
+
+    // Find where the active day went
+    const newActiveIdx = sorted.findIndex((d) => d.day === activeDayCode) !== -1 
+      ? sorted.findIndex((d) => d.day === activeDayCode)
+      : sorted.findIndex((d) => d.day === newDayLabel);
+    if (newActiveIdx !== -1) {
+      setActiveDay(newActiveIdx);
+    }
     showToast(`Moved to ${newDayLabel} ✓`);
   };
 
@@ -775,8 +826,8 @@ export default function WorkoutPlanner() {
                                         {s.reps} reps
                                       </span>
                                       {s.rpe && (
-                                        <span className="ml-auto text-[9px] text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded font-mono">
-                                          RPE {s.rpe}
+                                        <span className="ml-auto text-[10px] text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded font-extrabold uppercase">
+                                          {s.rpe.includes("RIR") || s.rpe.toLowerCase() === "failure" ? s.rpe : `RPE ${s.rpe}`}
                                         </span>
                                       )}
                                     </div>
@@ -1332,20 +1383,22 @@ export default function WorkoutPlanner() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase tracking-wider font-bold text-zinc-500">RPE (1-10)</label>
-                          <input
-                            type="number"
-                            placeholder="1-10"
-                            min="1"
-                            max="10"
+                          <label className="text-[9px] uppercase tracking-wider font-bold text-zinc-500">Effort (RIR)</label>
+                          <select
                             value={s.rpe}
                             onChange={(e) => {
                               const ns = [...todaySets];
                               ns[si] = { ...ns[si], rpe: e.target.value };
                               setLogIn({ sets: ns });
                             }}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-violet-500 text-center"
-                          />
+                            className="w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-violet-500 text-center cursor-pointer"
+                          >
+                            <option value="">None</option>
+                            <option value="0 RIR">0 RIR</option>
+                            <option value="1 RIR">1 RIR</option>
+                            <option value="2 RIR">2 RIR</option>
+                            <option value="Failure">Failure</option>
+                          </select>
                         </div>
                       </div>
 
