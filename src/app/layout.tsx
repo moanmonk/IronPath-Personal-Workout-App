@@ -4,6 +4,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Workout Planner & Progress Tracker",
   description: "An advanced, fully customizable workout planner and progress tracker for strength training and bodybuilding.",
+  icons: {
+    icon: "/apple-touch-icon.png",
+    shortcut: "/apple-touch-icon.png",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Iron Path",
+  },
 };
 
 export default function RootLayout({
