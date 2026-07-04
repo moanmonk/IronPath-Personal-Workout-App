@@ -572,7 +572,7 @@ function ReorderableExerciseItem({
             e.preventDefault();
             dragControls.start(e);
           }}
-          className="p-1 text-zinc-600 hover:text-zinc-400 cursor-grab active:cursor-grabbing shrink-0 select-none mt-1"
+          className="p-1 text-zinc-600 hover:text-zinc-400 cursor-grab active:cursor-grabbing shrink-0 select-none mt-1 touch-none"
           title="Drag to reorder"
         >
           <svg
