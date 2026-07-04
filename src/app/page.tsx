@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, Reorder, useDragControls } from "motion/react";
 import {
   Calendar,
   TrendingUp,
@@ -188,11 +188,31 @@ const EX_GROUPS: Record<string, string[]> = {
 };
 
 function getExInfo(name: string): ExerciseDBItem | null {
+  const clean = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .replace(/rope|smithmachine|smith|dumbbell|barbell|machine|cable|straightbar|vbar/g, "");
+
+  const cleanName = clean(name || "");
+
+  // First try exact match
   for (const group of Object.values(EXERCISE_DB)) {
-    const found = group.find((e) => e.name === name);
+    const found = group.find((e) => e.name.toLowerCase() === (name || "").toLowerCase());
     if (found) return found;
   }
-  return null;
+
+  // Then try normalized match where one contains another or clean version matches
+  let bestMatch: ExerciseDBItem | null = null;
+  for (const group of Object.values(EXERCISE_DB)) {
+    for (const e of group) {
+      const dbClean = clean(e.name);
+      if (dbClean && cleanName && (dbClean === cleanName || cleanName.includes(dbClean) || dbClean.includes(cleanName))) {
+        bestMatch = e;
+      }
+    }
+  }
+  return bestMatch;
 }
 
 function findGroupForExercise(name: string): string {
@@ -218,90 +238,451 @@ const DAY_TYPES = [
   "Custom"
 ];
 
+const MUSCLE_LIST = [
+  "Chest",
+  "Lats",
+  "Upper Back",
+  "Front Delts",
+  "Side Delts",
+  "Rear Delts",
+  "Biceps",
+  "Brachialis",
+  "Triceps",
+  "Forearms",
+  "Quads",
+  "Hamstrings",
+  "Glutes",
+  "Calves",
+  "Abs"
+];
+
+const EXERCISE_MUSCLE_MAPPING: Record<string, string[]> = {
+  // Chest
+  "Incline Dumbbell Press": ["Chest", "Front Delts"],
+  "Flat Dumbbell Press": ["Chest"],
+  "Incline Chest Press": ["Chest"],
+  "Incline Dumbbell/Smith Press": ["Chest", "Front Delts"],
+  "Smith Machine Incline Press": ["Chest", "Front Delts"],
+  "Cable Fly Low-to-High": ["Chest"],
+  "Cable Fly High-to-Low": ["Chest"],
+  "Low-to-High Cable Fly": ["Chest"],
+  "Pec Deck Fly": ["Chest"],
+  "Cable Chest Press": ["Chest"],
+  // Shoulders
+  "Dumbbell Shoulder Press": ["Front Delts"],
+  "Overhead Dumbbell Press": ["Front Delts"],
+  "Smith Machine Shoulder Press": ["Front Delts"],
+  "Cable Shoulder Press": ["Front Delts"],
+  "Cable Lateral Raise": ["Side Delts"],
+  "Dumbbell Lateral Raise": ["Side Delts"],
+  "Machine Lateral Raise": ["Side Delts"],
+  // Back
+  "Bodyweight Pull-Up": ["Lats", "Upper Back"],
+  "Weighted Pull-Up": ["Lats", "Upper Back"],
+  "Wide-Grip Lat Pulldown": ["Lats"],
+  "Wide Grip Lat Pulldown": ["Lats"],
+  "Close Grip Pulldown (V Bar)": ["Lats"],
+  "Straight-Arm Pulldown": ["Lats"],
+  "Straight Arm Pulldown": ["Lats"],
+  "Seated Cable Row (V Bar)": ["Upper Back"],
+  "Seated Cable Row (Close Grip)": ["Upper Back"],
+  "Close-Grip Cable Row": ["Upper Back"],
+  "Wide-Grip Cable Row": ["Upper Back"],
+  "Chest-Supported DB Row": ["Upper Back"],
+  "Single Arm Cable Row": ["Upper Back"],
+  "Smith Machine Row": ["Upper Back"],
+  // Rear Delts / Traps
+  "Reverse Pec Deck": ["Rear Delts"],
+  "Reverse Pec Deck Fly": ["Rear Delts"],
+  "Cable Face Pull (Rope)": ["Rear Delts"],
+  "Face Pull": ["Rear Delts"],
+  "Dumbbell Rear Delt Fly": ["Rear Delts"],
+  "Band Pull-Apart": ["Rear Delts"],
+  "Dumbbell Shrug": ["Upper Back"],
+  "Barbell Shrug": ["Upper Back"],
+  "Smith Machine Shrug": ["Upper Back"],
+  "Cable Shrug": ["Upper Back"],
+  // Biceps / Brachialis
+  "Barbell Curl": ["Biceps"],
+  "EZ Bar Curl": ["Biceps"],
+  "Cable Curl (Straight Bar)": ["Biceps"],
+  "Cable Curl": ["Biceps"],
+  "Incline DB Curl": ["Biceps"],
+  "Incline Dumbbell Curl": ["Biceps"],
+  "Preacher Curl": ["Biceps"],
+  "Hammer Curl": ["Brachialis"],
+  "Cable Hammer Curl (Rope)": ["Brachialis"],
+  "EZ Bar Reverse Curl": ["Brachialis"],
+  "Cable Reverse Curl (Straight Bar)": ["Brachialis"],
+  "Cable Reverse Curl": ["Brachialis"],
+  // Triceps
+  "Cable Overhead Extension (Rope)": ["Triceps"],
+  "Cable Overhead Extension (Straight Bar)": ["Triceps"],
+  "Rope Overhead Triceps Extension": ["Triceps"],
+  "Dumbbell Overhead Extension": ["Triceps"],
+  "Rope Pushdown": ["Triceps"],
+  "V Bar Pushdown": ["Triceps"],
+  "Straight Bar Pushdown": ["Triceps"],
+  "Straight Bar Triceps Pushdown": ["Triceps"],
+  "Single Arm Cable Pushdown": ["Triceps"],
+  // Forearms
+  "Dumbbell Wrist Curl": ["Forearms"],
+  "Barbell Wrist Curl": ["Forearms"],
+  "Cable Wrist Curl": ["Forearms"],
+  "Reverse Wrist Curl": ["Forearms"],
+  "Wrist Curl": ["Forearms"],
+  "Farmer's Carry": ["Forearms"],
+  "Dead Hang": ["Forearms"],
+  "Plate Pinch": ["Forearms"],
+  // Legs
+  "Smith Machine Squat": ["Quads", "Glutes"],
+  "Squat (Barbell/Smith)": ["Quads", "Hamstrings", "Glutes"],
+  "Barbell RDL": ["Hamstrings", "Glutes"],
+  "Smith Machine RDL": ["Hamstrings", "Glutes"],
+  "Leg Press": ["Quads", "Glutes"],
+  "Hack Squat": ["Quads", "Glutes"],
+  "Leg Extension Machine": ["Quads"],
+  "Leg Extension": ["Quads"],
+  "Dumbbell Goblet Squat": ["Quads", "Glutes"],
+  "Lying Leg Curl": ["Hamstrings"],
+  "Leg Curl": ["Hamstrings"],
+  "Sumo Squat": ["Glutes"],
+  "Bulgarian Split Squat": ["Quads", "Glutes"],
+  "Hip Thrust (Smith Machine)": ["Glutes"],
+  "Cable Kickback": ["Glutes"],
+  "Calf Raise": ["Calves"],
+  "Smith Machine Calf Raise": ["Calves"],
+  "Standing DB Calf Raise": ["Calves"],
+  "Seated Calf Raise": ["Calves"],
+  "Leg Press Calf Raise": ["Calves"],
+  // Abs
+  "Cable Crunch": ["Abs"],
+  "Hanging Leg Raise": ["Abs"],
+  "Plank": ["Abs"],
+  "Ab Wheel Rollout": ["Abs"]
+};
+
+function getMusclesForExercise(ex: any): string[] {
+  if (ex.muscles && ex.muscles.length > 0) {
+    return ex.muscles;
+  }
+  const mapping = EXERCISE_MUSCLE_MAPPING[ex.name];
+  if (mapping && mapping.length > 0) {
+    return mapping;
+  }
+  if (ex.group) {
+    const grp = ex.group.toLowerCase();
+    const name = ex.name.toLowerCase();
+    if (grp.includes("chest") || grp.includes("press") && (grp.includes("chest") || name.includes("chest"))) return ["Chest"];
+    if (grp.includes("pulldown") || grp.includes("pull-up") || grp.includes("lat")) return ["Lats"];
+    if (grp.includes("row")) return ["Upper Back"];
+    if (grp.includes("lateral") || grp.includes("lateral raise")) return ["Side Delts"];
+    if (grp.includes("shoulder press")) return ["Front Delts"];
+    if (grp.includes("rear") || grp.includes("face pull")) return ["Rear Delts"];
+    if (grp.includes("bicep") || grp.includes("curl")) {
+      if (name.includes("hammer") || name.includes("reverse")) return ["Brachialis"];
+      return ["Biceps"];
+    }
+    if (grp.includes("tricep") || grp.includes("extension") || grp.includes("pushdown")) return ["Triceps"];
+    if (grp.includes("wrist") || grp.includes("forearm")) return ["Forearms"];
+    if (grp.includes("squat") || grp.includes("extension")) return ["Quads"];
+    if (grp.includes("curl") && grp.includes("leg")) return ["Hamstrings"];
+    if (grp.includes("deadlift") || grp.includes("rdl")) return ["Hamstrings", "Glutes"];
+    if (grp.includes("calf")) return ["Calves"];
+    if (grp.includes("abs") || grp.includes("crunch") || grp.includes("core")) return ["Abs"];
+  }
+  return [];
+}
+
+function getVolumeStatus(sets: number) {
+  if (sets === 0) {
+    return {
+      label: "None",
+      colorClass: "bg-zinc-850 text-zinc-500",
+      textClass: "text-zinc-600",
+      borderClass: "border-zinc-900/40",
+      barColor: "bg-zinc-800/40"
+    };
+  }
+  if (sets >= 1 && sets <= 5) {
+    return {
+      label: "Maintenance",
+      colorClass: "bg-sky-500/10 text-sky-400",
+      textClass: "text-sky-400",
+      borderClass: "border-sky-500/20",
+      barColor: "bg-sky-500"
+    };
+  }
+  if (sets >= 6 && sets <= 9) {
+    return {
+      label: "Moderate",
+      colorClass: "bg-amber-500/10 text-amber-400",
+      textClass: "text-amber-400",
+      borderClass: "border-amber-500/20",
+      barColor: "bg-amber-500"
+    };
+  }
+  if (sets >= 10 && sets <= 20) {
+    return {
+      label: "Optimal",
+      colorClass: "bg-emerald-500/10 text-emerald-400",
+      textClass: "text-emerald-400",
+      borderClass: "border-emerald-500/20",
+      barColor: "bg-emerald-500"
+    };
+  }
+  return {
+    label: "Very High",
+    colorClass: "bg-rose-500/10 text-rose-400",
+    textClass: "text-rose-400",
+    borderClass: "border-rose-500/20",
+    barColor: "bg-rose-500"
+  };
+}
+
 const defaultPlan = [
   {
-    day: "Mon",
-    label: "Legs",
-    focus: "Quads · Hamstrings · Calves",
-    color: "#2EAD6B",
-    accent: "#3dc97d",
-    exercises: [
-      { id: 16, name: "Smith Machine Squat", group: "Squat", method: "Smith Machine", sets: 4, reps: "6–8", note: "Feet slightly forward, sit deep" },
-      { id: 17, name: "Barbell RDL", group: "Deadlift", method: "Barbell", sets: 4, reps: "8–10", note: "Hip hinge, hamstring stretch" },
-      { id: 18, name: "Leg Extension Machine", group: "Leg Extension", method: "Machine", sets: 4, reps: "10–12", note: "Pause 1 sec at top, slow eccentric" },
-      { id: 19, name: "Lying Leg Curl", group: "Leg Curl", method: "Machine", sets: 4, reps: "10–12", note: "Focus on stretch and eccentric phase" },
-      { id: 20, name: "Smith Machine Calf Raise", group: "Calf Raise", method: "Smith Machine", sets: 4, reps: "10–12", note: "2-sec pause at bottom stretch" },
-    ]
-  },
-  {
-    day: "Wed",
-    label: "Push",
-    focus: "Chest · Shoulders · Triceps",
-    color: "#E8533F",
-    accent: "#ff6b54",
-    exercises: [
-      { id: 1, name: "Dumbbell Shoulder Press", group: "Shoulder Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "Full overhead ROM, seated" },
-      { id: 2, name: "Incline Dumbbell Press", group: "Chest Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "45° angle, upper chest focus" },
-      { id: 3, name: "Cable Lateral Raise", group: "Lateral Raise", method: "Cable", sets: 4, reps: "12–15", note: "Cross-body, slow 3-sec eccentric" },
-      { id: 4, name: "Cable Fly Low-to-High", group: "Chest Fly", method: "Cable", sets: 3, reps: "12–15", note: "Squeeze hard at center" },
-      { id: 5, name: "Pec Deck Fly", group: "Chest Fly", method: "Machine", sets: 3, reps: "12–15", note: "Peak contraction, stack never rests" },
-      { id: 6, name: "Cable Overhead Extension (Rope)", group: "Overhead Tricep Extension", method: "Rope", sets: 3, reps: "12–15", note: "Long head emphasis, full stretch" },
-      { id: 7, name: "Straight Bar Pushdown", group: "Tricep Pushdown", method: "Straight Bar", sets: 3, reps: "12–15", note: "Flare wrists at bottom, squeeze" },
-    ]
-  },
-  {
-    day: "Thu",
+    day: "Sat",
     label: "Pull",
     focus: "Back · Biceps · Forearms",
     color: "#3F7DE8",
     accent: "#5490ff",
     exercises: [
-      { id: 8, name: "Bodyweight Pull-Up", group: "Pull-Up", method: "Bodyweight", sets: 3, reps: "5–8", note: "Chest to bar, 1.5x shoulder width" },
-      { id: 9, name: "Seated Cable Row (V Bar)", group: "Row (Horizontal)", method: "V Bar", sets: 3, reps: "8–10", note: "Squeeze scapula hard at end" },
-      { id: 10, name: "Wide Grip Lat Pulldown", group: "Pulldown", method: "Straight Bar", sets: 3, reps: "10–12", note: "Elbows down and in" },
-      { id: 11, name: "Cable Face Pull (Rope)", group: "Face Pull", method: "Rope", sets: 3, reps: "15–20", note: "High anchor, pull to forehead" },
-      { id: 12, name: "Cable Curl (Straight Bar)", group: "Bicep Curl", method: "Straight Bar", sets: 3, reps: "8–10", note: "Full supination, no swinging" },
-      { id: 13, name: "Cable Hammer Curl (Rope)", group: "Hammer Curl", method: "Rope", sets: 3, reps: "10–12", note: "3-sec eccentric, arc out not up" },
-      { id: 14, name: "Dumbbell Wrist Curl", group: "Wrist Curl", method: "Dumbbell", sets: 3, reps: "15–20", note: "Forearm flexors, full ROM" },
-      { id: 15, name: "Cable Reverse Curl (Straight Bar)", group: "Reverse Curl", method: "Straight Bar", sets: 3, reps: "12–15", note: "Brachioradialis + forearm extensors" },
-    ]
-  },
-  {
-    day: "Fri",
-    label: "Shoulders & Arms",
-    focus: "Shoulders · Biceps · Triceps · Forearms",
-    color: "#9B3FE8",
-    accent: "#b55fff",
-    badge: "Priority ⭐",
-    exercises: [
-      { id: 21, name: "Dumbbell Shoulder Press", group: "Shoulder Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "Full overhead lockout" },
-      { id: 22, name: "Cable Lateral Raise", group: "Lateral Raise", method: "Cable", sets: 4, reps: "12–15", note: "Both sides, constant tension" },
-      { id: 23, name: "Reverse Pec Deck", group: "Rear Delt", method: "Machine", sets: 3, reps: "12–15", note: "Squeeze at peak, no momentum" },
-      { id: 24, name: "Cable Hammer Curl (Rope)", group: "Hammer Curl", method: "Rope", sets: 3, reps: "10–12", note: "Neutral grip" },
-      { id: 25, name: "Cable Curl (Straight Bar)", group: "Bicep Curl", method: "Straight Bar", sets: 3, reps: "8–10", note: "Supinate fully, peak squeeze" },
-      { id: 26, name: "Cable Overhead Extension (Rope)", group: "Overhead Tricep Extension", method: "Rope", sets: 4, reps: "12–15", note: "Keep elbows tucked" },
-      { id: 27, name: "Straight Bar Pushdown", group: "Tricep Pushdown", method: "Straight Bar", sets: 3, reps: "12–15", note: "Flare at bottom, last set to failure" },
-      { id: 28, name: "Cable Reverse Curl (Straight Bar)", group: "Reverse Curl", method: "Cable", sets: 3, reps: "10–12", note: "Forearm finisher" },
+      { id: 1, name: "Close-Grip Cable Row", group: "Row (Horizontal)", method: "Cable", sets: 4, reps: "10–12", note: "Keep torso upright, pull handle to lower sternum, drive elbows back and squeeze shoulder blades." },
+      { id: 2, name: "Wide-Grip Lat Pulldown", group: "Pulldown", method: "Straight Bar", sets: 4, reps: "6–10", note: "Pull bar down to upper chest, drive elbows down, do not swing torso. Squeeze lats at bottom." },
+      { id: 3, name: "Straight-Arm Pulldown", group: "Pulldown", method: "Rope", sets: 4, reps: "10–15", note: "Keep arms straight with a soft bend in elbows, pull with lats down to hips. Stretch lats at the top." },
+      { id: 4, name: "Face Pull", group: "Face Pull", method: "Rope", sets: 3, reps: "10–15", note: "Pull rope to forehead/ears, flaring elbows out and squeezing rear delts and upper traps." },
+      { id: 5, name: "Cable Curl", group: "Bicep Curl", method: "Cable", sets: 3, reps: "10–12", note: "Keep elbows pinned to sides, squeeze biceps fully at the top contraction. Control the lower." },
+      { id: 6, name: "Hammer Curl", group: "Hammer Curl", method: "Dumbbell", sets: 4, reps: "10–12", note: "Neutral grip (thumbs up), targets brachialis & brachioradialis for overall arm thickness." },
+      { id: 7, name: "Cable Wrist Curl", group: "Wrist Curl", method: "Cable", sets: 3, reps: "15–20", note: "Support forearms on thighs, let weight roll down fingers, then curl wrist up against resistance." }
     ]
   },
   {
     day: "Sun",
-    label: "Back & Rear Delts",
-    focus: "Back · Rear Delts · Traps · Forearms",
-    color: "#E8A63F",
-    accent: "#f5b94e",
-    badge: "Priority ⭐",
+    label: "Push",
+    focus: "Chest · Shoulders · Triceps",
+    color: "#E8533F",
+    accent: "#ff6b54",
     exercises: [
-      { id: 29, name: "Wide Grip Lat Pulldown", group: "Pulldown", method: "Straight Bar", sets: 3, reps: "10–12", note: "Width focus, full stretch at bottom" },
-      { id: 30, name: "Seated Cable Row (V Bar)", group: "Row (Horizontal)", method: "V Bar", sets: 3, reps: "8–10", note: "No momentum, pure lat and mid-back" },
-      { id: 31, name: "Straight Arm Pulldown", group: "Pulldown", method: "Straight Bar", sets: 3, reps: "10–12", note: "Cheat up straight arm" },
-      { id: 32, name: "Cable Face Pull (Rope)", group: "Face Pull", method: "Rope", sets: 3, reps: "15–20", note: "Rear delt + upper trap" },
-      { id: 33, name: "Dumbbell Shrug", group: "Shrug", method: "Dumbbell", sets: 3, reps: "10–12", note: "Hold 1-2 sec at top" },
-      { id: 34, name: "Cable Reverse Curl (Straight Bar)", group: "Reverse Curl", method: "Cable", sets: 3, reps: "12–15", note: "Forearm extensor finisher" },
-      { id: 35, name: "Dead Hang", group: "Grip/Carry", method: "Bodyweight", sets: 3, reps: "20–30s", note: "Grip strength + lat decompression" },
+      { id: 8, name: "Overhead Dumbbell Press", group: "Shoulder Press", method: "Dumbbell", sets: 3, reps: "6–10", note: "Press vertically overhead, brace core, control the descent down to ear-level. Don't arch lower back." },
+      { id: 9, name: "Incline Chest Press", group: "Chest Press", method: "Dumbbell", sets: 4, reps: "6–10", note: "30-45 degree incline. Drive dumbbells up and slightly inward over upper chest. Squeeze chest." },
+      { id: 10, name: "Cable Lateral Raise", group: "Lateral Raise", method: "Cable", sets: 4, reps: "15–20", note: "Raise hand out to side, slightly in front of body line, lead with elbow to isolate side delts." },
+      { id: 11, name: "Low-to-High Cable Fly", group: "Chest Fly", method: "Cable", sets: 4, reps: "10–15", note: "Set cables low, press up and inward in a hugging motion to activate upper chest fibers." },
+      { id: 12, name: "Rope Overhead Triceps Extension", group: "Overhead Tricep Extension", method: "Rope", sets: 3, reps: "10–15", note: "Keep elbows pointing forward, extend arms overhead fully, focus on long head deep stretch." },
+      { id: 13, name: "Straight Bar Triceps Pushdown", group: "Tricep Pushdown", method: "Straight Bar", sets: 3, reps: "10–15", note: "Press bar down to hips, lock elbows out, do not lean excessively. Keep elbows pinned." }
     ]
   },
+  {
+    day: "Tue",
+    label: "Shoulders + Arms",
+    focus: "Shoulders · Arms",
+    color: "#9B3FE8",
+    accent: "#b55fff",
+    exercises: [
+      { id: 14, name: "Dumbbell Lateral Raise", group: "Lateral Raise", method: "Dumbbell", sets: 3, reps: "10–15", note: "Slight forward lean, raise dumbbells out to sides to shoulder level. Lead with elbows." },
+      { id: 15, name: "Cable Lateral Raise", group: "Lateral Raise", method: "Cable", sets: 4, reps: "10–15", note: "Raise hand out to side, slightly in front of body line, lead with elbow to isolate side delts." },
+      { id: 16, name: "Cable Curl", group: "Bicep Curl", method: "Cable", sets: 3, reps: "10–12", note: "Keep elbows pinned to sides, squeeze biceps fully at the top contraction. Control the lower." },
+      { id: 17, name: "Incline Dumbbell Curl", group: "Bicep Curl", method: "Dumbbell", sets: 3, reps: "8–12", note: "Incline bench at 45-60 degrees. Keep elbows back to isolate the bicep long head stretch." },
+      { id: 18, name: "Cable Reverse Curl", group: "Reverse Curl", method: "Cable", sets: 3, reps: "10–12", note: "Overhand grip, targets brachioradialis and forearm extensors. Control the descent." },
+      { id: 19, name: "Rope Overhead Triceps Extension", group: "Overhead Tricep Extension", method: "Rope", sets: 3, reps: "10–15", note: "Keep elbows pointing forward, extend arms overhead fully, focus on long head deep stretch." },
+      { id: 20, name: "Straight Bar Triceps Pushdown", group: "Tricep Pushdown", method: "Straight Bar", sets: 3, reps: "10–15", note: "Press bar down to hips, lock elbows out, do not lean excessively. Keep elbows pinned." },
+      { id: 21, name: "Cable Wrist Curl", group: "Wrist Curl", method: "Cable", sets: 3, reps: "15–20", note: "Support forearms on thighs, let weight roll down fingers, then curl wrist up against resistance." }
+    ]
+  },
+  {
+    day: "Thu",
+    label: "Chest + Back",
+    focus: "Chest · Back",
+    color: "#E8A63F",
+    accent: "#f5b94e",
+    exercises: [
+      { id: 22, name: "Incline Dumbbell/Smith Press", group: "Chest Press", method: "Dumbbell", sets: 4, reps: "6–8", note: "Set bench to 30-45 degrees, lower slowly to upper chest, press up in a controlled arc." },
+      { id: 23, name: "Pec Deck Fly", group: "Chest Fly", method: "Machine", sets: 3, reps: "10–15", note: "Keep slight bend in elbows, squeeze inner chest fully at the middle contraction. Don't let stack rest." },
+      { id: 24, name: "Wide-Grip Lat Pulldown", group: "Pulldown", method: "Straight Bar", sets: 3, reps: "6–10", note: "Pull bar down to upper chest, drive elbows down, do not swing torso. Squeeze lats at bottom." },
+      { id: 25, name: "Wide-Grip Cable Row", group: "Row (Horizontal)", method: "Cable", sets: 4, reps: "10–12", note: "Pull wide bar to upper abdomen, flare elbows slightly to target upper back and rear delts." },
+      { id: 26, name: "Straight-Arm Pulldown", group: "Pulldown", method: "Rope", sets: 4, reps: "10–15", note: "Keep arms straight with a soft bend in elbows, pull with lats down to hips. Stretch lats at the top." },
+      { id: 27, name: "Low-to-High Cable Fly", group: "Chest Fly", method: "Cable", sets: 4, reps: "10–15", note: "Set cables low, press up and inward in a hugging motion to activate upper chest fibers." }
+    ]
+  },
+  {
+    day: "Fri",
+    label: "Shoulders + Legs + Abs + Forearms",
+    focus: "Shoulders · Legs · Abs · Forearms",
+    color: "#2EAD6B",
+    accent: "#3dc97d",
+    exercises: [
+      { id: 28, name: "Dumbbell Lateral Raise", group: "Lateral Raise", method: "Dumbbell", sets: 3, reps: "10–15", note: "Slight forward lean, raise dumbbells out to sides to shoulder level. Lead with elbows." },
+      { id: 29, name: "Cable Lateral Raise", group: "Lateral Raise", method: "Cable", sets: 4, reps: "10–15", note: "Raise hand out to side, slightly in front of body line, lead with elbow to isolate side delts." },
+      { id: 30, name: "Reverse Pec Deck Fly", group: "Rear Delt", method: "Machine", sets: 4, reps: "10–15", note: "Pull arms back horizontally, squeeze rear delts, avoid shrugging traps to isolate rear shoulders." },
+      { id: 31, name: "Leg Extension", group: "Leg Extension", method: "Machine", sets: 3, reps: "10–15", note: "Adjust pad to ankles, point toes straight, pause for 1-sec at full knee lockout for max quad contraction." },
+      { id: 32, name: "Leg Curl", group: "Leg Curl", method: "Machine", sets: 3, reps: "10–12", note: "Keep hips pressed flat against pad, curl heels to glutes, feel the stretch during the slow negative." },
+      { id: 33, name: "Squat (Barbell/Smith)", group: "Squat", method: "Barbell", sets: 3, reps: "8–10", note: "Push hips back, descend until thighs are parallel or lower, keep chest up and drive through heels." },
+      { id: 34, name: "Calf Raise", group: "Calf Raise", method: "Machine", sets: 4, reps: "10–15", note: "Full stretch at bottom for 2 seconds, drive up on balls of feet, hold peak squeeze for 1 second." },
+      { id: 35, name: "Cable Crunch", group: "Core", method: "Rope", sets: 3, reps: "10–15", note: "Kneeling facing cable, crunch down using abs to bring elbows to thighs. Squeeze core at bottom." },
+      { id: 36, name: "Reverse Wrist Curl", group: "Wrist Curl", method: "Cable", sets: 3, reps: "15–20", note: "Curl knuckles upward to target wrist extensors, support forearms on bench/thighs." },
+      { id: 37, name: "Wrist Curl", group: "Wrist Curl", method: "Barbell", sets: 3, reps: "15–20", note: "Curl palms upward to target wrist flexors, let bar/DB roll down to fingers for full stretch." }
+    ]
+  }
 ];
+
+function ReorderableExerciseItem({
+  ex,
+  i,
+  activeDay,
+  checked,
+  cur,
+  last,
+  exInfo,
+  updateChecked,
+  setSwapEx,
+  setEditEx,
+  handleOpenLog,
+  delEx
+}: {
+  ex: any;
+  i: number;
+  activeDay: number;
+  checked: Record<string, boolean>;
+  cur: any;
+  last: any;
+  exInfo: any;
+  updateChecked: any;
+  setSwapEx: any;
+  setEditEx: any;
+  handleOpenLog: any;
+  delEx: any;
+}) {
+  const dragControls = useDragControls();
+  const ck = `${activeDay}-${i}`;
+  const done = checked[ck];
+
+  return (
+    <Reorder.Item
+      value={ex}
+      dragListener={false}
+      dragControls={dragControls}
+      className={`transition-all duration-200 select-none ${
+        done ? "bg-zinc-950/30" : "hover:bg-zinc-900/20"
+      }`}
+    >
+      <div className="p-5 flex gap-4 items-start">
+        {/* Drag handle (≡) icon so it's obvious */}
+        <div
+          onPointerDown={(e) => {
+            e.preventDefault();
+            dragControls.start(e);
+          }}
+          className="p-1 text-zinc-600 hover:text-zinc-400 cursor-grab active:cursor-grabbing shrink-0 select-none mt-1"
+          title="Drag to reorder"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+          </svg>
+        </div>
+
+        {/* Custom Animated Checkbox */}
+        <button
+          onClick={() => updateChecked({ ...checked, [ck]: !checked[ck] })}
+          className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 flex-shrink-0 mt-0.5 transition-all duration-150 cursor-pointer ${
+            done
+              ? "border-transparent text-white"
+              : "border-zinc-800 hover:border-zinc-700"
+          }`}
+          style={{ backgroundColor: done ? cur.color : "transparent" }}
+        >
+          {done && <Check className="w-3.5 h-3.5 font-black" />}
+        </button>
+
+        {/* Exercise Meta */}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex justify-between items-start gap-3">
+            <h3
+              className={`text-sm md:text-base font-bold tracking-tight leading-snug truncate ${
+                done ? "text-zinc-600 line-through" : "text-zinc-100"
+              }`}
+            >
+              {ex.name}
+            </h3>
+            <span
+              className={`text-sm font-black flex-shrink-0 ${
+                done ? "text-zinc-600" : ""
+              }`}
+              style={{ color: done ? undefined : cur.accent }}
+            >
+              {ex.sets}×{ex.reps}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 items-center pt-0.5">
+            <span
+              className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md"
+              style={{
+                backgroundColor: `${cur.color}15`,
+                color: cur.accent
+              }}
+            >
+              {ex.method}
+            </span>
+
+            {last && (
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded-md border border-emerald-500/10">
+                Last: {last.weight ? `${last.weight}kg · ` : ""}{last.sets}×{last.reps}
+              </span>
+            )}
+
+            {/* Target Muscles Badge */}
+            {getMusclesForExercise(ex).map((m) => (
+              <span
+                key={m}
+                className="text-[9px] font-semibold bg-violet-500/5 text-violet-400 px-1.5 py-0.5 rounded border border-violet-500/10 uppercase"
+              >
+                {m}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Micro actions toolbar */}
+      <div className="flex gap-1.5 pb-4 px-5 pl-14 flex-wrap">
+        <button
+          onClick={() => setSwapEx({ di: activeDay, ei: i })}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800/40 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Swap</span>
+        </button>
+        <button
+          onClick={() => setEditEx({ di: activeDay, ei: i })}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800/40 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+          <span>Edit</span>
+        </button>
+        <button
+          onClick={() => handleOpenLog(activeDay, i)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800/40 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
+        >
+          <ClipboardList className="w-3.5 h-3.5" />
+          <span>Log Set</span>
+        </button>
+        <button
+          onClick={() => delEx(activeDay, i)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-[11px] font-bold text-red-400 hover:text-red-300 transition cursor-pointer"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          <span>Remove</span>
+        </button>
+      </div>
+    </Reorder.Item>
+  );
+}
 
 export default function WorkoutPlanner() {
   const [mounted, setMounted] = useState(false);
@@ -336,6 +717,27 @@ export default function WorkoutPlanner() {
     logged: boolean;
   }
   const [logIn, setLogIn] = useState<{ sets: LogInSet[] }>({ sets: [] });
+
+  const getWeeklyVolume = () => {
+    const volume: Record<string, number> = {};
+    for (const m of MUSCLE_LIST) {
+      volume[m] = 0;
+    }
+    for (const d of plan) {
+      if (d.exercises) {
+        for (const ex of d.exercises) {
+          const sets = parseInt(ex.sets) || 0;
+          const muscles = getMusclesForExercise(ex);
+          for (const m of muscles) {
+            if (volume[m] !== undefined) {
+              volume[m] += sets;
+            }
+          }
+        }
+      }
+    }
+    return volume;
+  };
 
   const sortPlanByDays = (p: any[]) => {
     return [...p].sort((a, b) => ALL_DAYS.indexOf(a.day) - ALL_DAYS.indexOf(b.day));
@@ -928,115 +1330,42 @@ export default function WorkoutPlanner() {
                 </div>
               )}
 
-              {cur.exercises &&
-                cur.exercises.map((ex: any, i: number) => {
-                  const ck = `${activeDay}-${i}`;
-                  const done = checked[ck];
-                  const last = lastLog(activeDay, i);
-                  const exInfo = getExInfo(ex.name);
-
-                  return (
-                    <div
-                      key={ex.id}
-                      className={`transition-all duration-200 ${
-                        done ? "bg-zinc-950/30" : "hover:bg-zinc-900/20"
-                      }`}
-                    >
-                      <div className="p-5 flex gap-4">
-                        {/* Custom Animated Checkbox */}
-                        <button
-                          onClick={() => updateChecked({ ...checked, [ck]: !checked[ck] })}
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 flex-shrink-0 mt-0.5 transition-all duration-150 ${
-                            done
-                              ? "border-transparent text-white"
-                              : "border-zinc-800 hover:border-zinc-700"
-                          }`}
-                          style={{ backgroundColor: done ? cur.color : "transparent" }}
-                        >
-                          {done && <Check className="w-3.5 h-3.5 font-black" />}
-                        </button>
-
-                        {/* Exercise Meta */}
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex justify-between items-start gap-3">
-                            <h3
-                              className={`text-sm md:text-base font-bold tracking-tight leading-snug truncate ${
-                                done ? "text-zinc-600 line-through" : "text-zinc-100"
-                              }`}
-                            >
-                              {ex.name}
-                            </h3>
-                            <span
-                              className={`text-sm font-black flex-shrink-0 ${
-                                done ? "text-zinc-600" : ""
-                              }`}
-                              style={{ color: done ? undefined : cur.accent }}
-                            >
-                              {ex.sets}×{ex.reps}
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap gap-1.5 items-center pt-0.5">
-                            <span
-                              className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md"
-                              style={{
-                                backgroundColor: `${cur.color}15`,
-                                color: cur.accent
-                              }}
-                            >
-                              {ex.method}
-                            </span>
-
-                            {last && (
-                              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded-md border border-emerald-500/10">
-                                Last: {last.weight ? `${last.weight}kg · ` : ""}{last.sets}×{last.reps}
-                              </span>
-                            )}
-                          </div>
-
-                          {exInfo?.note && (
-                            <div className="flex gap-2 items-start mt-3 p-3 bg-zinc-950/60 rounded-xl border border-zinc-900">
-                              <Info className="w-4 h-4 text-zinc-600 shrink-0 mt-0.5" />
-                              <p className="text-zinc-500 text-xs leading-relaxed">{exInfo.note}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Micro actions toolbar */}
-                      <div className="flex gap-1.5 pb-4 px-5 pl-14 flex-wrap">
-                        <button
-                          onClick={() => setSwapEx({ di: activeDay, ei: i })}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800/40 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-                        >
-                          <RefreshCw className="w-3 h-3" />
-                          <span>Swap</span>
-                        </button>
-                        <button
-                          onClick={() => setEditEx({ di: activeDay, ei: i })}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800/40 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-                        >
-                          <Pencil className="w-3 h-3" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => handleOpenLog(activeDay, i)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800/40 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-                        >
-                          <ClipboardList className="w-3 h-3" />
-                          <span>Log Set</span>
-                        </button>
-                        <button
-                          onClick={() => delEx(activeDay, i)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-[11px] font-bold text-red-400 hover:text-red-300 transition"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Remove</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              {cur.exercises && (
+                <Reorder.Group
+                  axis="y"
+                  values={cur.exercises}
+                  onReorder={(newExs) => {
+                    const updated = plan.map((d, i) => {
+                      if (i !== activeDay) return d;
+                      return { ...d, exercises: newExs };
+                    });
+                    updatePlan(updated);
+                  }}
+                  className="divide-y divide-zinc-900/60"
+                >
+                  {cur.exercises.map((ex: any, i: number) => {
+                    const last = lastLog(activeDay, i);
+                    const exInfo = getExInfo(ex.name);
+                    return (
+                      <ReorderableExerciseItem
+                        key={ex.id || i}
+                        ex={ex}
+                        i={i}
+                        activeDay={activeDay}
+                        checked={checked}
+                        cur={cur}
+                        last={last}
+                        exInfo={exInfo}
+                        updateChecked={updateChecked}
+                        setSwapEx={setSwapEx}
+                        setEditEx={setEditEx}
+                        handleOpenLog={handleOpenLog}
+                        delEx={delEx}
+                      />
+                    );
+                  })}
+                </Reorder.Group>
+              )}
             </div>
 
             {/* Add Exercise Trigger Button */}
@@ -1052,6 +1381,46 @@ export default function WorkoutPlanner() {
               <Plus className="w-4 h-4" />
               <span>Add Exercise</span>
             </button>
+
+            {/* Weekly Muscle Volume Tracker Section */}
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-violet-400" />
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Weekly Muscle Volume</h3>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Sets / Week</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-1">
+                {MUSCLE_LIST.map((muscle) => {
+                  const volume = getWeeklyVolume();
+                  const totalSets = volume[muscle] || 0;
+                  const status = getVolumeStatus(totalSets);
+                  const percent = Math.min(100, (totalSets / 20) * 100);
+
+                  return (
+                    <div key={muscle} className="space-y-2">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-zinc-200">{muscle}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-zinc-300">{totalSets} sets</span>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${status.colorClass} ${status.borderClass}`}>
+                            {status.label}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${status.barColor}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </main>
@@ -1180,6 +1549,7 @@ export default function WorkoutPlanner() {
         {editEx && (() => {
           const { di, ei } = editEx;
           const ex = plan[di].exercises[ei];
+          const exInfo = getExInfo(ex.name);
 
           const handleSetsChange = (val: number) => updEx(di, ei, { sets: val });
           const handleRepsChange = (val: string) => updEx(di, ei, { reps: val });
@@ -1276,12 +1646,91 @@ export default function WorkoutPlanner() {
                     </div>
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="text-[10px] tracking-wider uppercase font-bold text-zinc-500">Target Muscle Groups</label>
+                    <div className="grid grid-cols-3 gap-1.5 p-3 bg-zinc-950 rounded-xl border border-zinc-900 max-h-36 overflow-y-auto">
+                      {MUSCLE_LIST.map((m) => {
+                        const currentMuscles = ex.muscles || getMusclesForExercise(ex);
+                        const isSelected = currentMuscles.includes(m);
+                        return (
+                          <button
+                            key={m}
+                            onClick={() => {
+                              const nextMuscles = isSelected
+                                ? currentMuscles.filter((x: string) => x !== m)
+                                : [...currentMuscles, m];
+                              updEx(di, ei, { muscles: nextMuscles });
+                            }}
+                            className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
+                              isSelected
+                                ? "bg-violet-600/15 border-violet-500 text-violet-400"
+                                : "bg-zinc-900/40 border-zinc-900/60 text-zinc-400 hover:text-zinc-200"
+                            }`}
+                          >
+                            <span>{m}</span>
+                            {isSelected && <Check className="w-2.5 h-2.5 flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] tracking-wider uppercase font-bold text-zinc-500">Move Exercise to Day</label>
+                    <select
+                      value={di}
+                      onChange={(e) => {
+                        const targetDi = parseInt(e.target.value);
+                        if (targetDi === di) return;
+
+                        const currentDay = plan[di];
+                        const targetDay = plan[targetDi];
+                        const movingEx = currentDay.exercises[ei];
+
+                        // Remove from current day
+                        const nextCurrentDayExs = currentDay.exercises.filter((_, idx) => idx !== ei);
+
+                        // Append to target day
+                        const nextTargetDayExs = [...(targetDay.exercises || []), { ...movingEx, id: Date.now() + targetDi }];
+
+                        // Map plan
+                        const nextPlan = plan.map((d, idx) => {
+                          if (idx === di) return { ...d, exercises: nextCurrentDayExs };
+                          if (idx === targetDi) return { ...d, exercises: nextTargetDayExs };
+                          return d;
+                        });
+
+                        updatePlan(nextPlan);
+                        setActiveDay(targetDi);
+                        setEditEx(null);
+                        showToast(`Moved "${movingEx.name}" to ${targetDay.day} ✓`);
+                      }}
+                      className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-violet-500 cursor-pointer"
+                    >
+                      {plan.map((d, idx) => (
+                        <option key={idx} value={idx} className="bg-zinc-950">
+                          {d.day} ({d.label})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] tracking-wider uppercase font-bold text-zinc-500">Exercise Note / Tip</label>
+                    <textarea
+                      value={ex.note !== undefined ? ex.note : (exInfo?.note || "")}
+                      onChange={(e) => updEx(di, ei, { note: e.target.value })}
+                      placeholder="Add instructions, execution tip, or custom setup here..."
+                      className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500 h-28 placeholder-zinc-600"
+                    />
+                  </div>
+
                   <button
                     onClick={() => {
                       setEditEx(null);
                       showToast("Saved ✓");
                     }}
-                    className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg mt-2"
+                    className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg mt-2 cursor-pointer"
                   >
                     Close & Apply
                   </button>
