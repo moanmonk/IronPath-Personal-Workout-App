@@ -1304,7 +1304,7 @@ export default function WorkoutPlanner() {
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [activeDay, setActiveDay] = useState(0);
-  const [activeTab, setActiveTab] = useState<"routine" | "volume" | "explore" | "logs" | "copypaste" | "split" | "theme">("routine");
+  const [activeTab, setActiveTab] = useState<"routine" | "volume" | "explore" | "logs" | "copypaste" | "split">("routine");
   const [toast, setToast] = useState("");
   const [activeTheme, setActiveTheme] = useState<"purple" | "red" | "orange" | "yellow" | "zinc" | "emerald" | "cyan" | "pink" | "amber">("purple");
 
@@ -1371,11 +1371,7 @@ export default function WorkoutPlanner() {
     const savedLastDate = localStorage.getItem("wp-last-checked-date");
     const savedTheme = localStorage.getItem("wp-theme");
 
-    if (savedTheme) {
-      setActiveTheme(savedTheme as any);
-    } else {
-      setActiveTheme("purple");
-    }
+    setActiveTheme("purple");
 
     const todayStr = new Date().toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -1458,7 +1454,7 @@ export default function WorkoutPlanner() {
         hexMuted: "#a78bfa",
         engine: "HEAVENLY RESTRICTION ENGINE",
         badge: "DEMON BACK ✓",
-        gradient: "from-violet-500 via-fuchsia-500 to-indigo-500",
+        gradient: "from-purple-600 via-violet-500 to-purple-300",
         badgeColor: "text-violet-400 border-violet-500/20 bg-violet-500/10",
         engineColor: "text-violet-500"
       },
@@ -1998,7 +1994,7 @@ export default function WorkoutPlanner() {
             initial={{ opacity: 0, y: -20, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: -20, x: "-50%" }}
-            className={`fixed top-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 ${themeStyles.text} px-5 py-3 rounded-xl text-xs font-semibold z-[9999] shadow-2xl flex items-center gap-2 whitespace-nowrap`}
+            className={`fixed top-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 ${themeStyles.text} px-4 py-2.5 rounded-xl text-xs font-semibold z-[9999] shadow-2xl flex items-center justify-center gap-2 text-center max-w-[90vw]`}
           >
             <Sparkles className={`w-4 h-4 ${themeStyles.text} animate-pulse`} />
             <span>{toast}</span>
@@ -2008,23 +2004,38 @@ export default function WorkoutPlanner() {
 
       {/* Hero Header */}
       <header className="border-b border-zinc-900 bg-zinc-950/40 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex flex-row items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className={`text-[9px] sm:text-[10px] tracking-[0.2em] font-extrabold ${brandTheme.engineColor} uppercase mb-1 flex items-center gap-1.5 truncate`}>
-              <Flame className={`w-3.5 h-3.5 ${brandTheme.engineColor} animate-pulse fill-current/10 shrink-0`} />
+            <div className={`text-[9px] tracking-[0.2em] font-extrabold ${brandTheme.engineColor} uppercase mb-0.5 flex items-center gap-1 truncate`}>
+              <Flame className={`w-3 h-3 ${brandTheme.engineColor} animate-pulse fill-current/10 shrink-0`} />
               <span className="truncate">{brandTheme.engine}</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-white flex items-center gap-2 flex-wrap">
+            <h1 className="text-base sm:text-lg font-black tracking-tighter text-white flex items-center gap-1.5 flex-wrap">
               <span className={`bg-gradient-to-r ${brandTheme.gradient} bg-clip-text text-transparent uppercase font-black tracking-tight shrink-0`}>
                 {brandTheme.title}
               </span>
-              <span className={`text-[8px] sm:text-[9px] font-bold tracking-widest border px-2 py-0.5 rounded-full uppercase shrink-0 ${brandTheme.badgeColor}`}>
+              <span className={`text-[8px] font-bold tracking-widest border px-1.5 py-0.5 rounded-full uppercase shrink-0 ${brandTheme.badgeColor}`}>
                 {brandTheme.badge}
               </span>
             </h1>
           </div>
           
-          <div className="flex items-center gap-3 shrink-0 self-start sm:self-center">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Paste (Sync) Trigger Button */}
+            <button
+              onClick={() => setActiveTab("copypaste")}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider transition cursor-pointer ${
+                activeTab === "copypaste"
+                  ? `${themeStyles.bgLight} ${themeStyles.text} ${themeStyles.border}`
+                  : "bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-white hover:border-zinc-700"
+              }`}
+              title="Copy / Paste Routine"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Paste</span>
+            </button>
+
+            {/* Active Tab Badge */}
             <span className="text-[9px] font-black tracking-widest uppercase bg-zinc-900 border border-zinc-800/80 px-2.5 py-1.5 rounded-lg text-zinc-400">
               {activeTab === "routine" && "Routine"}
               {activeTab === "volume" && "Volume"}
@@ -2032,7 +2043,6 @@ export default function WorkoutPlanner() {
               {activeTab === "logs" && "Logs"}
               {activeTab === "copypaste" && "Sync"}
               {activeTab === "split" && "Split"}
-              {activeTab === "theme" && "Theme"}
             </span>
           </div>
         </div>
@@ -2673,85 +2683,6 @@ export default function WorkoutPlanner() {
           </div>
         )}
 
-        {/* 7. THEME CUSTOMIZATION TAB */}
-        {activeTab === "theme" && (
-          <div className="space-y-6">
-            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
-              <Sparkles className={`w-10 h-10 ${themeStyles.text} mx-auto animate-pulse`} />
-              <h2 className="text-base font-black text-white uppercase tracking-wider">Aesthetic Customizer</h2>
-              <p className="text-zinc-500 text-xs max-w-sm mx-auto">
-                Select your power engine. Every engine completely alters the visual highlights, borders, energy glow, and dashboard graphics of your workout planner.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-8">
-              {Object.entries({
-                purple: { name: "Purple Toji", desc: "Heavy physical prowess inspired by Heavenly Restriction.", badge: "DEMON BACK ✓", class: "bg-violet-600" },
-                red: { name: "Red Kaioken", desc: "A fiery red theme designed for multiplying speed, focus, and training output.", badge: "LIMITLESS POWER ✓", class: "bg-red-600" },
-                orange: { name: "Orange Goku", desc: "A bright godly orange aesthetic designed for transcending physical thresholds.", badge: "GOD-TIER ULTRA ✓", class: "bg-orange-600" },
-                yellow: { name: "Yellow Saitama", desc: "A powerful yellow theme designed for breaking limits and explosive force.", badge: "ONE PUNCH WORKOUT ✓", class: "bg-yellow-500" },
-                emerald: { name: "Emerald Beast", desc: "A high-intensity green theme optimized for raw speed and beast mode adaptation.", badge: "FULL COWL OVERDRIVE ✓", class: "bg-emerald-600" },
-                cyan: { name: "Cyan UI", desc: "An ice-blue theme focusing on effortless muscle coordination and cosmic flows.", badge: "ULTRA INSTINCT ✓", class: "bg-cyan-600" },
-                pink: { name: "Pink Rose", desc: "A stylish fuchsia/pink theme celebrating high-fashion power and aesthetic cuts.", badge: "PINK ROSE OVERLOAD ✓", class: "bg-pink-600" },
-                amber: { name: "Golden Frieza", desc: "A brilliant golden theme highlighting absolute confidence and premium heavy lifts.", badge: "SUPER SAIYAN GOLD ✓", class: "bg-amber-600" },
-                zinc: { name: "Classic Zinc", desc: "A pure technical slate hybrid design focused purely on raw biomechanical data.", badge: "ELITE STRENGTH ✓", class: "bg-zinc-600" },
-              }).map(([key, t]) => {
-                const isSelected = activeTheme === key;
-                const cardTheme = key === "purple" ? { text: "text-violet-400", bgLight: "bg-violet-600/10", border: "border-violet-500/20" }
-                  : key === "red" ? { text: "text-red-400", bgLight: "bg-red-600/10", border: "border-red-500/20" }
-                  : key === "orange" ? { text: "text-orange-400", bgLight: "bg-orange-600/10", border: "border-orange-500/20" }
-                  : key === "yellow" ? { text: "text-yellow-400", bgLight: "bg-yellow-500/10", border: "border-yellow-500/20" }
-                  : key === "emerald" ? { text: "text-emerald-400", bgLight: "bg-emerald-600/10", border: "border-emerald-500/20" }
-                  : key === "cyan" ? { text: "text-cyan-400", bgLight: "bg-cyan-600/10", border: "border-cyan-500/20" }
-                  : key === "pink" ? { text: "text-pink-400", bgLight: "bg-pink-600/10", border: "border-pink-500/20" }
-                  : key === "amber" ? { text: "text-amber-400", bgLight: "bg-amber-600/10", border: "border-amber-500/20" }
-                  : { text: "text-zinc-400", bgLight: "bg-zinc-600/10", border: "border-zinc-850" };
-
-                const borderSelected = key === "purple" ? "border-violet-500 ring-1 ring-violet-500/20 shadow-violet-500/5"
-                  : key === "red" ? "border-red-500 ring-1 ring-red-500/20 shadow-red-500/5"
-                  : key === "orange" ? "border-orange-500 ring-1 ring-orange-500/20 shadow-orange-500/5"
-                  : key === "yellow" ? "border-yellow-500 ring-1 ring-yellow-500/20 shadow-yellow-500/5"
-                  : key === "emerald" ? "border-emerald-500 ring-1 ring-emerald-500/20 shadow-emerald-500/5"
-                  : key === "cyan" ? "border-cyan-500 ring-1 ring-cyan-500/20 shadow-cyan-500/5"
-                  : key === "pink" ? "border-pink-500 ring-1 ring-pink-500/20 shadow-pink-500/5"
-                  : key === "amber" ? "border-amber-500 ring-1 ring-amber-500/20 shadow-amber-500/5"
-                  : "border-zinc-500 ring-1 ring-zinc-500/20 shadow-zinc-500/5";
-
-                return (
-                  <button
-                    key={key}
-                    onClick={() => handleThemeChange(key as any)}
-                    className={`text-left p-5 rounded-2xl border transition relative flex flex-col justify-between h-42 cursor-pointer ${
-                      isSelected
-                        ? `bg-zinc-900 border-2 ${borderSelected} shadow-[0_4px_25px_rgba(0,0,0,0.4)]`
-                        : "bg-zinc-950 hover:bg-zinc-900/60 border-zinc-900/80 hover:border-zinc-800"
-                    }`}
-                  >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3.5 h-3.5 rounded-full ${t.class} border border-white/20`} />
-                        <span className="text-sm font-black text-white">{t.name}</span>
-                        {isSelected && (
-                          <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold bg-white/10 ${cardTheme.text}`}>
-                            Active
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-zinc-500 text-[11px] leading-relaxed pr-6">{t.desc}</p>
-                    </div>
-
-                    <div className="flex justify-between items-center mt-3">
-                      <span className={`text-[8px] tracking-wider uppercase font-bold px-2 py-0.5 rounded border ${cardTheme.bgLight} ${cardTheme.text} ${cardTheme.border}`}>
-                        {t.badge}
-                      </span>
-                      {isSelected && <Check className={`w-4 h-4 ${cardTheme.text}`} />}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </main>
 
       {/* Fixed Bottom Dock Navigation (Highly detailed, touch friendly, premium layout) */}
@@ -2798,16 +2729,6 @@ export default function WorkoutPlanner() {
           </button>
 
           <button
-            onClick={() => setActiveTab("copypaste")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
-              activeTab === "copypaste" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            <span className="text-[9px] tracking-tight">Paste</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab("split")}
             className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
               activeTab === "split" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
@@ -2815,16 +2736,6 @@ export default function WorkoutPlanner() {
           >
             <CalendarDays className="w-5 h-5" />
             <span className="text-[9px] tracking-tight">Split</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("theme")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
-              activeTab === "theme" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Palette className="w-5 h-5" />
-            <span className="text-[9px] tracking-tight">Theme</span>
           </button>
         </div>
       </div>
