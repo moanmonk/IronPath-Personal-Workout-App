@@ -20,7 +20,9 @@ import {
   Info,
   CalendarDays,
   Copy,
-  FileText
+  FileText,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 // ─── CONSTANTS & DATABASES ──────────────────────────────────────────────────
@@ -73,6 +75,9 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
     { name: "Pec Deck Fly", method: "Machine", sets: 3, reps: "12–15", note: "Adjust seat so handles are at chest height. Elbows slightly bent. Squeeze chest hard as you bring arms together. Pause 1 sec at peak. Don't let the weight stack touch between reps." },
     { name: "Smith Machine Incline Press", method: "Smith Machine", sets: 4, reps: "8–10", note: "Set bench at 30–45°. Grip slightly wider than shoulder width. Unrack and lower to upper chest. Press back up. Smith machine path keeps form strict — good for beginners." },
     { name: "Cable Chest Press", method: "Cable", sets: 3, reps: "10–12", note: "Cables at chest height, stand in split stance. Press forward and slightly together. Constant tension throughout the range. Great as a finisher after presses." },
+    { name: "Machine Chest Press", method: "Machine", sets: 4, reps: "8–10", note: "Sit upright, adjust handles to mid-chest. Press forward with control. Locks the movement pattern for high intensity safety." },
+    { name: "Incline Machine Chest Press", method: "Machine", sets: 4, reps: "8–10", note: "Adjust seat so handles align with upper chest. Press up and forward. Focuses upper chest with minimal shoulder strain." },
+    { name: "Single-Arm Cable Chest Press", method: "Cable", sets: 3, reps: "10–12", note: "Set cable at chest height. Stand in a staggered stance and press unilaterally. Emphasizes stability and core anti-rotation." },
   ],
   "Shoulders": [
     { name: "Dumbbell Shoulder Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "Sit upright. Start with DBs at ear level, elbows at 90°. Press directly overhead without flaring elbows too wide. Lower under control. Brace your core — don't arch lower back." },
@@ -81,6 +86,9 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
     { name: "Dumbbell Lateral Raise", method: "Dumbbell", sets: 4, reps: "12–15", note: "Slight forward lean, raise arms out to sides. Lead with elbows not wrists. Pinky slightly higher than thumb at top. Lower slowly. Go lighter than you think — most people ego lift here." },
     { name: "Machine Lateral Raise", method: "Machine", sets: 3, reps: "12–15", note: "Adjust pad to elbow height. Press elbows (not wrists) into pads. Raise to shoulder level. Great beginner option as it locks the movement pattern." },
     { name: "Cable Shoulder Press", method: "Cable", sets: 4, reps: "10–12", note: "Set cables low on both sides. Press from ear level up overhead. Cables create a different resistance curve than DBs. Keep core braced throughout." },
+    { name: "Machine Shoulder Press", method: "Machine", sets: 4, reps: "8–10", note: "Adjust seat so handles are at shoulder level. Press overhead. Excellent for lifting heavy without needing to stabilize." },
+    { name: "Single-Arm Dumbbell Shoulder Press", method: "Dumbbell", sets: 3, reps: "10–12", note: "Perform shoulder press unilaterally while standing or sitting. Engages your obliques and core for lateral stability." },
+    { name: "Single-Arm Cable Lateral Raise", method: "Cable", sets: 4, reps: "12–15", note: "Set cable low. Perform unilaterally. Allows you to focus on the lateral delt squeeze and stretch on each side." },
   ],
   "Back": [
     { name: "Bodyweight Pull-Up", method: "Bodyweight", sets: 4, reps: "5–8", note: "Hang with arms fully extended. Grip 1.5x shoulder width. Drive elbows down and back as you pull chest toward bar. Squeeze lats at top. Lower fully. If you can't do 5, use an assisted machine or band." },
@@ -93,6 +101,11 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
     { name: "Close Grip Pulldown (V Bar)", method: "V Bar", sets: 3, reps: "10–12", note: "Narrower grip targets lower lats and adds thickness. Pull to chest, squeeze hard. Let lats fully stretch at top. Keep chest up throughout." },
     { name: "Straight Arm Pulldown", method: "Rope", sets: 3, reps: "12–15", note: "Stand, arms extended in front. Keep elbows soft. Push rope down toward thighs in an arc. Squeeze lats at bottom. No arm bending — this is pure lat isolation. Great finisher." },
     { name: "Smith Machine Row", method: "Smith Machine", sets: 4, reps: "8–10", note: "Bend at hips to ~45°. Grip bar, pull to lower chest. Drive elbows back. Smith path is fixed so focus entirely on feeling the lats contract." },
+    { name: "T-Bar Row", method: "Barbell", sets: 4, reps: "8–10", note: "Straddle the bar, hinge forward. Pull barbell collar up to chest. Squeezes the mid-back and traps perfectly." },
+    { name: "Chest-Supported T-Bar Row", method: "Machine", sets: 4, reps: "8–10", note: "Lie chest-down on T-bar pad. Pull handles back, squeezing shoulder blades together. Eliminates lower-back cheating." },
+    { name: "Single-Arm Dumbbell Row", method: "Dumbbell", sets: 3, reps: "8–10", note: "One knee on bench or standard split-stance. Row dumbbell to hip, driving elbow back. Excellent unilateral lat activator." },
+    { name: "Single-Arm Lat Pulldown", method: "Cable", sets: 3, reps: "10–12", note: "Unilateral pulldown using a D-handle. Allows a deeper pull into the lower lat pocket and correction of muscle imbalances." },
+    { name: "Machine Row", method: "Machine", sets: 4, reps: "8–12", note: "Sit upright, pull handles back. Keeps the back movement rigid and isolated without momentum." },
   ],
   "Biceps": [
     { name: "Barbell Curl", method: "Barbell", sets: 3, reps: "8–10", note: "Stand, underhand grip shoulder width. Curl bar up without swinging. Fully supinate (rotate wrists out) at top. Squeeze bicep hard. Lower in 3 seconds. Keep elbows pinned to sides." },
@@ -102,6 +115,9 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
     { name: "Preacher Curl", method: "EZ Bar", sets: 3, reps: "10–12", note: "Arms braced on pad, no cheating possible. Lower slowly for full stretch. Don't fully lock out at bottom — keep tension. Great for beginners to feel the bicep work." },
     { name: "Hammer Curl", method: "Dumbbell", sets: 3, reps: "10–12", note: "Neutral grip (thumbs up). Curl without rotating wrist. Targets brachialis (under the bicep) and brachioradialis. Adds arm thickness. Arc the DB slightly outward rather than straight up." },
     { name: "Cable Hammer Curl (Rope)", method: "Rope", sets: 3, reps: "10–12", note: "Attach rope to low cable. Hammer grip, curl up. Rope allows wrists to move naturally. Keep elbows pinned. Slow 3-sec lower." },
+    { name: "Machine Bicep Curl", method: "Machine", sets: 3, reps: "10–12", note: "Sit in bicep machine, rest elbows on pad. Curl handles upward. Keeps bicep under continuous target tension." },
+    { name: "Single-Arm Dumbbell Preacher Curl", method: "Dumbbell", sets: 3, reps: "10–12", note: "Rest one arm on the preacher bench. Curl DB up. Isolates the bicep short head unilaterally for balanced peaks." },
+    { name: "Incline Hammer Curl", method: "Dumbbell", sets: 3, reps: "10–12", note: "Sit on incline bench, neutral grip. Curl DBs up. Great compound forearm/brachialis long head stretch." },
   ],
   "Triceps": [
     { name: "Cable Overhead Extension (Rope)", method: "Rope", sets: 4, reps: "12–15", note: "Set cable high, face away. Lean forward slightly. Elbows close to head. Extend arms forward/down. Stretches the long head (biggest portion of tricep). Slow eccentric for max growth." },
@@ -111,6 +127,8 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
     { name: "Straight Bar Pushdown", method: "Straight Bar", sets: 3, reps: "12–15", note: "Overhand grip on straight bar. Elbows locked at sides. Push straight down. Wrists stay neutral. Some people feel this more in the lateral/medial head vs rope which hits all heads." },
     { name: "Single Arm Cable Pushdown", method: "Cuff/Ring", sets: 3, reps: "12–15", note: "One arm at a time allows full focus and addresses imbalances. Keep elbow pinned. Extend fully, hold 1 sec. Use a single handle or cuff attachment." },
     { name: "Dumbbell Overhead Extension", method: "Dumbbell", sets: 3, reps: "12–15", note: "Hold one DB with both hands overhead. Lower behind head slowly, feeling the stretch. Press back up. Keep elbows narrow. Great long head stretch." },
+    { name: "Machine Tricep Extension", method: "Machine", sets: 3, reps: "12–15", note: "Adjust seat. Place elbows on pad, press handles down. Perfect isolation for the lateral head of the tricep." },
+    { name: "Single-Arm Tricep Pushdown", method: "Cable", sets: 3, reps: "12–15", note: "Use a single cable line (no attachment or handle). Push down unilaterally, extending out to the side for the lateral head." },
   ],
   "Forearms": [
     { name: "Dumbbell Wrist Curl", method: "Dumbbell", sets: 3, reps: "15–20", note: "Sit, forearms resting on thighs, palms up. Let DB roll to fingertips, then curl wrist up fully. Slow and controlled. Targets forearm flexors. High reps work well here." },
@@ -143,6 +161,10 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
     { name: "Lying Leg Curl", method: "Machine", sets: 4, reps: "10–12", note: "Lie face down, pad just above ankles. Curl heels toward glutes. Squeeze hard at top. Lower slowly — the eccentric stretch is where growth happens." },
     { name: "Hack Squat", method: "Machine", sets: 4, reps: "8–10", note: "Shoulders under pads, feet shoulder width on platform. Lower until thighs are parallel or below. Drive through heels. Great quad builder with lower back strain than barbell squat." },
     { name: "Dumbbell Goblet Squat", method: "Dumbbell", sets: 3, reps: "12–15", note: "Hold DB at chest. Feet shoulder width. Squat deep, elbows tracking inside knees at bottom. Great for beginners to learn squat mechanics with natural upright torso." },
+    { name: "Single-Leg Press", method: "Machine", sets: 3, reps: "10–12", note: "Position one foot on the platform. Press unilaterally. Balances out quad, hamstring, and glute discrepancies." },
+    { name: "Single-Leg Extension", method: "Machine", sets: 3, reps: "10–12", note: "Extend one leg at a time on the machine. Excellent for balancing the quadriceps tear-drop." },
+    { name: "Single-Leg Curl", method: "Machine", sets: 3, reps: "10–12", note: "Perform leg curl unilaterally. Essential for curing left/right hamstring imbalances." },
+    { name: "Single-Leg RDL", method: "Dumbbell", sets: 3, reps: "8–10", note: "Hold one DB, hinge at hips while lifting opposite leg backward. Demands high balance, glute, and hamstring stability." },
   ],
   "Calves": [
     { name: "Smith Machine Calf Raise", method: "Smith Machine", sets: 4, reps: "10–12", note: "Toes on edge of plate or step for full ROM. Lower until you feel a deep stretch in the calf. Press all the way up onto tiptoes. Hold 1 sec at top. 2-sec pause at bottom stretch for max growth." },
@@ -165,28 +187,338 @@ const EXERCISE_DB: Record<string, ExerciseDBItem[]> = {
 };
 
 const EX_GROUPS: Record<string, string[]> = {
-  "Chest Press": ["Incline Dumbbell Press", "Flat Dumbbell Press", "Smith Machine Incline Press", "Cable Chest Press"],
+  "Chest Press": ["Incline Dumbbell Press", "Flat Dumbbell Press", "Smith Machine Incline Press", "Cable Chest Press", "Machine Chest Press", "Incline Machine Chest Press", "Single-Arm Cable Chest Press"],
   "Chest Fly": ["Cable Fly Low-to-High", "Cable Fly High-to-Low", "Pec Deck Fly"],
-  "Shoulder Press": ["Dumbbell Shoulder Press", "Smith Machine Shoulder Press", "Cable Shoulder Press"],
-  "Lateral Raise": ["Cable Lateral Raise", "Dumbbell Lateral Raise", "Machine Lateral Raise"],
+  "Shoulder Press": ["Dumbbell Shoulder Press", "Smith Machine Shoulder Press", "Cable Shoulder Press", "Machine Shoulder Press", "Single-Arm Dumbbell Shoulder Press"],
+  "Lateral Raise": ["Cable Lateral Raise", "Dumbbell Lateral Raise", "Machine Lateral Raise", "Single-Arm Cable Lateral Raise"],
   "Rear Delt": ["Reverse Pec Deck", "Cable Face Pull (Rope)", "Dumbbell Rear Delt Fly", "Band Pull-Apart"],
   "Face Pull": ["Cable Face Pull (Rope)"],
-  "Pull-Up": ["Bodyweight Pull-Up", "Weighted Pull-Up", "Wide Grip Lat Pulldown", "Close Grip Pulldown (V Bar)"],
-  "Row (Horizontal)": ["Seated Cable Row (V Bar)", "Seated Cable Row (Close Grip)", "Chest-Supported DB Row", "Single Arm Cable Row", "Smith Machine Row"],
-  "Deadlift": ["Smith Machine RDL", "Barbell RDL"],
-  "Pulldown": ["Wide Grip Lat Pulldown", "Close Grip Pulldown (V Bar)", "Straight Arm Pulldown"],
+  "Pull-Up": ["Bodyweight Pull-Up", "Weighted Pull-Up", "Wide Grip Lat Pulldown", "Close Grip Pulldown (V Bar)", "Single-Arm Lat Pulldown"],
+  "Row (Horizontal)": ["Seated Cable Row (V Bar)", "Seated Cable Row (Close Grip)", "Chest-Supported DB Row", "Single Arm Cable Row", "Smith Machine Row", "T-Bar Row", "Chest-Supported T-Bar Row", "Single-Arm Dumbbell Row", "Machine Row"],
+  "Deadlift": ["Smith Machine RDL", "Barbell RDL", "Single-Leg RDL"],
+  "Pulldown": ["Wide Grip Lat Pulldown", "Close Grip Pulldown (V Bar)", "Straight Arm Pulldown", "Single-Arm Lat Pulldown"],
   "Shrug": ["Dumbbell Shrug", "Barbell Shrug", "Smith Machine Shrug", "Cable Shrug"],
-  "Bicep Curl": ["Barbell Curl", "EZ Bar Curl", "Cable Curl (Straight Bar)", "Incline DB Curl", "Preacher Curl"],
-  "Hammer Curl": ["Hammer Curl", "Cable Hammer Curl (Rope)"],
-  "Tricep Pushdown": ["Rope Pushdown", "V Bar Pushdown", "Straight Bar Pushdown", "Single Arm Cable Pushdown"],
-  "Overhead Tricep Extension": ["Cable Overhead Extension (Rope)", "Cable Overhead Extension (Straight Bar)", "Dumbbell Overhead Extension"],
+  "Bicep Curl": ["Barbell Curl", "EZ Bar Curl", "Cable Curl (Straight Bar)", "Incline DB Curl", "Preacher Curl", "Machine Bicep Curl", "Single-Arm Dumbbell Preacher Curl"],
+  "Hammer Curl": ["Hammer Curl", "Cable Hammer Curl (Rope)", "Incline Hammer Curl"],
+  "Tricep Pushdown": ["Rope Pushdown", "V Bar Pushdown", "Straight Bar Pushdown", "Single Arm Cable Pushdown", "Single-Arm Tricep Pushdown"],
+  "Overhead Tricep Extension": ["Cable Overhead Extension (Rope)", "Cable Overhead Extension (Straight Bar)", "Dumbbell Overhead Extension", "Machine Tricep Extension"],
   "Wrist Curl": ["Dumbbell Wrist Curl", "Barbell Wrist Curl", "Cable Wrist Curl"],
   "Reverse Curl": ["EZ Bar Reverse Curl", "Cable Reverse Curl (Straight Bar)"],
   "Grip/Carry": ["Farmer's Carry", "Plate Pinch", "Dead Hang"],
-  "Squat": ["Smith Machine Squat", "Dumbbell Goblet Squat", "Leg Press", "Hack Squat"],
-  "Leg Curl": ["Lying Leg Curl", "Smith Machine RDL", "Barbell RDL"],
-  "Leg Extension": ["Leg Extension Machine", "Hack Squat"],
-  "Calf Raise": ["Smith Machine Calf Raise", "Standing DB Calf Raise", "Seated Calf Raise", "Leg Press Calf Raise"],
+  "Squat": ["Smith Machine Squat", "Dumbbell Goblet Squat", "Leg Press", "Hack Squat", "Single-Leg Press"],
+  "Leg Curl": ["Lying Leg Curl", "Smith Machine RDL", "Barbell RDL", "Single-Leg Curl"],
+  "Leg Extension": ["Leg Extension Machine", "Hack Squat", "Single-Leg Extension"],
+  "Calf Raise": ["Smith Machine Calf Raise", "Standing DB Calf Raise", "Seated Calf Raise", "Leg Press Calf Raise"]
+};
+
+interface TemplateDay {
+  day: string;
+  label: string;
+  focus: string;
+  badge?: string;
+  color: string;
+  accent: string;
+  exercises: {
+    id: number;
+    name: string;
+    method: string;
+    sets: number;
+    reps: string;
+    note: string;
+  }[];
+}
+
+const EXPLORE_TEMPLATES: Record<string, { name: string; description: string; goal: string; repRangeTips: string; warmupTips: string; plan: TemplateDay[] }> = {
+  "toji_vtaper": {
+    name: "Toji's Heavenly Restriction (Full 4-Day V-Taper & Core)",
+    description: "Inspired by JJK's ultimate physical beast, Toji Fushiguro. Built to forge a massive, thick back, wide lateral delts, a solid chest plate, and shredded abs. No sorcery, just raw physical dominance.",
+    goal: "Elite V-Taper Aesthetic & Midsection Shred",
+    repRangeTips: "Focus on 8-12 hyper-controlled reps. Use a 3-second negative (eccentric) to maximize mechanical tension and stretch under load.",
+    warmupTips: "10 shoulder dislocations, scapular shrugs, dead hangs (60s), and light rotators cuff cable work.",
+    plan: [
+      {
+        day: "Mon",
+        label: "Heavenly Back",
+        focus: "Lats & Upper Back Width",
+        badge: "Toji Shield 🛡️",
+        color: "#9B3FE8",
+        accent: "#b55fff",
+        exercises: [
+          { id: 201, name: "Weighted Pull-Up", method: "Weighted", sets: 4, reps: "6–8", note: "Keep chest high, drive elbows down into sides. Core squeezed." },
+          { id: 202, name: "Wide Grip Lat Pulldown", method: "Straight Bar", sets: 3, reps: "10–12", note: "Slow release. Focus on stretching the outer lats fully." },
+          { id: 203, name: "Chest-Supported T-Bar Row", method: "Machine", sets: 4, reps: "8–10", note: "Neutral grip. Squeeze upper back and mid-traps at peak." },
+          { id: 204, name: "Straight Arm Pulldown", method: "Rope", sets: 3, reps: "12–15", note: "Isolate lats. Push down and back, squeezing the armpits." }
+        ]
+      },
+      {
+        day: "Tue",
+        label: "Steel Chest & Shoulders",
+        focus: "Upper Chest & Side Delts",
+        badge: "Sorcerer Armor 🧱",
+        color: "#3F7DE8",
+        accent: "#5490ff",
+        exercises: [
+          { id: 205, name: "Incline Dumbbell Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "Set bench to 30–45°. Stretch deep, press with control." },
+          { id: 206, name: "Flat Dumbbell Press", method: "Dumbbell", sets: 3, reps: "10–12", note: "Keep shoulder blades pinned to the bench." },
+          { id: 207, name: "Cable Lateral Raise", method: "Cable", sets: 4, reps: "12–15", note: "Perform behind back for maximum lateral head fiber tension." },
+          { id: 208, name: "Dumbbell Lateral Raise", method: "Dumbbell", sets: 3, reps: "15–20", note: "Slight forward lean, raise up and out in scapular plane." }
+        ]
+      },
+      {
+        day: "Thu",
+        label: "Cursed Arms & Forearms",
+        focus: "Biceps, Triceps & Grip",
+        badge: "Fushiguro Grip 🗡️",
+        color: "#E8533F",
+        accent: "#ff6b54",
+        exercises: [
+          { id: 209, name: "EZ Bar Curl", method: "EZ Bar", sets: 4, reps: "10–12", note: "Strict curls, no swinging. Focus on bicep thickness." },
+          { id: 210, name: "Cable Overhead Extension (Rope)", method: "Rope", sets: 4, reps: "12–15", note: "Deep triceps stretch behind head, lock out at top." },
+          { id: 211, name: "Hammer Curl", method: "Dumbbell", sets: 3, reps: "10–12", note: "Builds brachialis and heavy forearms." },
+          { id: 212, name: "Rope Pushdown", method: "Rope", sets: 3, reps: "12–15", note: "Spread rope apart at bottom of repetition." }
+        ]
+      },
+      {
+        day: "Fri",
+        label: "Sorcerer Killer Legs & Core",
+        focus: "Unilateral Legs, Calves & Abs",
+        badge: "Physical Gift 🌪️",
+        color: "#2EAD6B",
+        accent: "#3dc97d",
+        exercises: [
+          { id: 213, name: "Hack Squat", method: "Machine", sets: 4, reps: "10–12", note: "Go below parallel. Powerful drive up." },
+          { id: 214, name: "Bulgarian Split Squat", method: "Dumbbell", sets: 3, reps: "10–12", note: "Brutal glute and quad loading. Maintain torso lean." },
+          { id: 215, name: "Hanging Leg Raise", method: "Bodyweight", sets: 4, reps: "12–15", note: "Strict raises, crunch pelvis up to build iron abs." },
+          { id: 216, name: "Cable Crunch", method: "Rope", sets: 3, reps: "15–20", note: "Weighted abdominal contraction." }
+        ]
+      }
+    ]
+  },
+  "goku_god_tier": {
+    name: "Goku's Hyperbolic 5-Day Split (God-Like Hypertrophy)",
+    description: "A comprehensive 5-day high-intensity routine inspired by Son Goku's training under 100g gravity. Designed for complete muscle group coverage with optimal volume, targeting chest, back, shoulders, arms, and legs on dedicated days.",
+    goal: "Maximum Muscle Hypertrophy & Power",
+    repRangeTips: "Mix heavy compound lifts (6-8 reps) with high-density isolation lifts (12-15 reps) to target both mechanical and metabolic growth.",
+    warmupTips: "5 mins skipping, high-knees, light rotator cuff work, and progressive warm-up sets.",
+    plan: [
+      {
+        day: "Mon",
+        label: "Goku Chest",
+        focus: "Heavy Press & Chest Flys",
+        badge: "Ultra Chest 💥",
+        color: "#E8533F",
+        accent: "#ff6b54",
+        exercises: [
+          { id: 101, name: "Smith Machine Incline Press", method: "Smith Machine", sets: 4, reps: "6–8", note: "Go heavy, squeeze upper chest at the peak." },
+          { id: 102, name: "Flat Dumbbell Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "Keep feet planted. Arch back slightly, shoulder blades pinned." },
+          { id: 103, name: "Cable Fly High-to-Low", method: "Cable", sets: 3, reps: "12–15", note: "Lean forward slightly. Squeeze lower chest chest plates." }
+        ]
+      },
+      {
+        day: "Tue",
+        label: "Divine Back",
+        focus: "Thick Rows & Lat Pulldowns",
+        badge: "Kami Width 🌌",
+        color: "#3F7DE8",
+        accent: "#5490ff",
+        exercises: [
+          { id: 104, name: "Bodyweight Pull-Up", method: "Bodyweight", sets: 4, reps: "8–12", note: "Full hang to full chin-over-bar pulls." },
+          { id: 105, name: "Seated Cable Row (V Bar)", method: "V Bar", sets: 3, reps: "8–10", note: "Squeeze back muscles hard, don't rock torso." },
+          { id: 106, name: "Wide Grip Lat Pulldown", method: "Straight Bar", sets: 3, reps: "10–12", note: "Bring bar to upper collarbone with controlled eccentric." }
+        ]
+      },
+      {
+        day: "Wed",
+        label: "Cosmic Shoulders",
+        focus: "Overhead Press & Lateral Raises",
+        badge: "Broad Delts 🪐",
+        color: "#E8A63F",
+        accent: "#f5b94e",
+        exercises: [
+          { id: 107, name: "Dumbbell Shoulder Press", method: "Dumbbell", sets: 4, reps: "8–10", note: "Sit tall. Keep core braced. Press straight up." },
+          { id: 108, name: "Cable Lateral Raise", method: "Cable", sets: 4, reps: "12–15", note: "Keep shoulder blades stable, raise arm in scapular plane." },
+          { id: 109, name: "Reverse Pec Deck", method: "Machine", sets: 3, reps: "15–20", note: "Isolate posterior deltoids. High-rep squeeze." }
+        ]
+      },
+      {
+        day: "Fri",
+        label: "Limitless Arms",
+        focus: "Bicep & Tricep Super-Sets",
+        badge: "Kaioken Pump 💪",
+        color: "#9B3FE8",
+        accent: "#b55fff",
+        exercises: [
+          { id: 110, name: "EZ Bar Curl", method: "EZ Bar", sets: 4, reps: "10–12", note: "Control down-phase over 3 seconds." },
+          { id: 111, name: "V Bar Pushdown", method: "V Bar", sets: 4, reps: "10–12", note: "Tuck elbows. Press straight down, locking triceps." },
+          { id: 112, name: "Incline DB Curl", method: "Dumbbell", sets: 3, reps: "10–12", note: "Slight incline bench. Massive biceps stretch." },
+          { id: 113, name: "Cable Overhead Extension (Rope)", method: "Rope", sets: 3, reps: "12–15", note: "Press forward and extend fully." }
+        ]
+      },
+      {
+        day: "Sat",
+        label: "Saiyan Lower",
+        focus: "Heavy Squats, Hamstrings & Calves",
+        badge: "Gravitational Power 🧱",
+        color: "#2EAD6B",
+        accent: "#3dc97d",
+        exercises: [
+          { id: 114, name: "Smith Machine Squat", method: "Smith Machine", sets: 4, reps: "8–10", note: "Keep deep upright stance, load quadriceps." },
+          { id: 115, name: "Lying Leg Curl", method: "Machine", sets: 4, reps: "10–12", note: "Contract calves/hamstrings. Keep hips pinned." },
+          { id: 116, name: "Standing DB Calf Raise", method: "Dumbbell", sets: 4, reps: "15–20", note: "Hold peak raise for 1 sec. Pause at stretch." }
+        ]
+      }
+    ]
+  },
+  "baki_beast": {
+    name: "Baki's Hanma Blood (Full 4-Day Athletic Split)",
+    description: "Designed for functional hypertrophy, endurance, and conditioning. Perfect for maintaining low body-fat percentages while packing on dense, vascular, high-performance muscle fiber.",
+    goal: "Vascular Definition & Athletic Conditioning",
+    repRangeTips: "Maintain high intensity with shorter rest times (45–60s) and reps in the 12–15 range.",
+    warmupTips: "5 mins skipping, full-body arm swings, knee raises, and dynamic bodyweight push-ups.",
+    plan: [
+      {
+        day: "Mon",
+        label: "Hanma Upper Power",
+        focus: "Chest, Upper Back & Row Compound Power",
+        badge: "Hanma Power 👹",
+        color: "#E83F7D",
+        accent: "#ff5490",
+        exercises: [
+          { id: 301, name: "Flat Dumbbell Press", method: "Dumbbell", sets: 4, reps: "10–12", note: "Explosive concentric press, slow eccentric." },
+          { id: 302, name: "Single-Arm Dumbbell Row", method: "Dumbbell", sets: 4, reps: "8–10", note: "Heavy rows. Maintain static core." },
+          { id: 303, name: "Incline Machine Chest Press", method: "Machine", sets: 3, reps: "10–12", note: "Keep steady pressure. Go close to failure." }
+        ]
+      },
+      {
+        day: "Tue",
+        label: "Demon Back",
+        focus: "Lat Width, Traps & Rear Delts",
+        badge: "Ogre Back 🧬",
+        color: "#3F7DE8",
+        accent: "#5490ff",
+        exercises: [
+          { id: 304, name: "Bodyweight Pull-Up", method: "Bodyweight", sets: 4, reps: "Max reps", note: "Pull until chest hits the bar on every repetition." },
+          { id: 305, name: "Barbell Shrug", method: "Barbell", sets: 3, reps: "10–12", note: "Heavy, squeeze traps at the absolute peak." },
+          { id: 306, name: "Cable Face Pull (Rope)", method: "Rope", sets: 4, reps: "15–20", note: "Pull to nose, flare elbows wide to build rear delts." }
+        ]
+      },
+      {
+        day: "Thu",
+        label: "Ogre Legs",
+        focus: "Leg Press, Hamstrings & Calf Loading",
+        badge: "Speed & Strength 🌪️",
+        color: "#2EAD6B",
+        accent: "#3dc97d",
+        exercises: [
+          { id: 307, name: "Leg Press", method: "Machine", sets: 4, reps: "12–15", note: "Go deep, explode out of the hole." },
+          { id: 308, name: "Barbell RDL", method: "Barbell", sets: 4, reps: "10–12", note: "Keep flat back. Stretch hamstrings fully." },
+          { id: 309, name: "Leg Press Calf Raise", method: "Machine", sets: 4, reps: "15–20", note: "Constant tension. High volume burn." }
+        ]
+      },
+      {
+        day: "Fri",
+        label: "Endurance & Core",
+        focus: "Full Body Circuits, Core & Grip Carry",
+        badge: "Iron Will 🧱",
+        color: "#3FE8C8",
+        accent: "#4ffff0",
+        exercises: [
+          { id: 310, name: "Farmer's Carry", method: "Dumbbell", sets: 3, reps: "45s carry", note: "Walk with heavy DBs. Keep traps tight and posture straight." },
+          { id: 311, name: "Hanging Leg Raise", method: "Bodyweight", sets: 4, reps: "12–15", note: "Keep body still, lift legs strictly." },
+          { id: 312, name: "Plank", method: "Bodyweight", sets: 3, reps: "60s hold", note: "Maximum core tension. Glutes squeezed." }
+        ]
+      }
+    ]
+  },
+  "one_punch_man": {
+    name: "One Punch Man (Arm & Upper Heroic Focus)",
+    description: "The ultimate upper body and arms developer, designed to build hero-level punching power, broad front/side delts, and massive bicep/tricep volume.",
+    goal: "Big Arms & Upper Body Power (2-Day Express)",
+    repRangeTips: "Focus on 10-15 reps with explosive concentric motion and 3-second negatives for optimal muscle tension.",
+    warmupTips: "5 mins arm circles, dynamic shoulder dislocates with a band, and 2 light warm-up sets of cable pushdowns.",
+    plan: [
+      {
+        day: "Mon",
+        label: "Push Force",
+        focus: "Chest, Front/Side Delts, Triceps",
+        badge: "Hero Power ⭐",
+        color: "#E8533F",
+        accent: "#ff6b54",
+        exercises: [
+          { id: 101, name: "Incline Dumbbell Press", method: "Dumbbell", sets: 4, reps: "10-12", note: "Focus on the deep stretch at the bottom and squeezing upper chest." },
+          { id: 102, name: "Machine Chest Press", method: "Machine", sets: 3, reps: "10-12", note: "Strict form, lock your shoulder blades back." },
+          { id: 103, name: "Dumbbell Shoulder Press", method: "Dumbbell", sets: 3, reps: "10-12", note: "Keep elbows tucked to ~75 degrees. Don't flare." },
+          { id: 104, name: "Single-Arm Cable Lateral Raise", method: "Cable", sets: 4, reps: "12-15", note: "Keep constant cable tension on each side." },
+          { id: 105, name: "Machine Tricep Extension", method: "Machine", sets: 4, reps: "12-15", note: "Full lockout at the bottom to target the lateral tricep head." }
+        ]
+      },
+      {
+        day: "Wed",
+        label: "Pull Strike",
+        focus: "Back, Rear Delts, Biceps, Forearms",
+        badge: "Limitless ⚡",
+        color: "#3F7DE8",
+        accent: "#5490ff",
+        exercises: [
+          { id: 107, name: "Weighted Pull-Up", method: "Weighted", sets: 4, reps: "6-8", note: "Or bodyweight to failure. Pull chest all the way to the bar." },
+          { id: 108, name: "Seated Cable Row (V Bar)", method: "V Bar", sets: 3, reps: "8-10", note: "Heavy, dense mid-back thickness." },
+          { id: 109, name: "Single-Arm Lat Pulldown", method: "Cable", sets: 3, reps: "10-12", note: "Pull unilaterally down into your back pocket." },
+          { id: 110, name: "Reverse Pec Deck", method: "Machine", sets: 4, reps: "12-15", note: "Isolate rear deltoids. Avoid rocking." },
+          { id: 111, name: "Single-Arm Dumbbell Preacher Curl", method: "Dumbbell", sets: 4, reps: "10-12", note: "Unilateral focus for massive bicep peaks." }
+        ]
+      }
+    ]
+  },
+  "titan_strength": {
+    name: "Titan's Might (Heavy Compound Power)",
+    description: "Built for pure powerlifters and strength enthusiasts. Focuses on heavy multi-joint compounds to recruit maximum motor units and construct a wall of steel.",
+    goal: "Absolute Raw Strength Building (3-Day Split)",
+    repRangeTips: "Low rep, high load: 5-8 reps. Explode on the upward movement, rest 2-3 minutes between working sets.",
+    warmupTips: "Full body foam rolling, hip open mobility, light squat progression, and shoulder rotational warm-ups.",
+    plan: [
+      {
+        day: "Mon",
+        label: "Power Press",
+        focus: "Heavy Chest, Shoulders, Triceps",
+        badge: "Titan Power 🏋️",
+        color: "#E8A63F",
+        accent: "#f5b94e",
+        exercises: [
+          { id: 301, name: "Smith Machine Incline Press", method: "Smith Machine", sets: 4, reps: "5-6", note: "Power from the chest. Go heavy with perfect safety." },
+          { id: 302, name: "Flat Dumbbell Press", method: "Dumbbell", sets: 4, reps: "6-8", note: "Heavy, press with power from your feet." },
+          { id: 303, name: "Smith Machine Shoulder Press", method: "Smith Machine", sets: 3, reps: "6-8", note: "Overhead press strength focus." },
+          { id: 304, name: "V Bar Pushdown", method: "V Bar", sets: 4, reps: "8-10", note: "Build maximum lock-out power." }
+        ]
+      },
+      {
+        day: "Wed",
+        label: "Titan Pull",
+        focus: "Heavy Back & Bicep Pulls",
+        badge: "Heavy Row 🧱",
+        color: "#9B3FE8",
+        accent: "#b55fff",
+        exercises: [
+          { id: 320, name: "Bodyweight Pull-Up", method: "Bodyweight", sets: 4, reps: "8–10", note: "Clean, weighted if possible. Pull back down." },
+          { id: 321, name: "Seated Cable Row (Close Grip)", method: "Straight Bar", sets: 4, reps: "6–8", note: "Pull with maximum force under tight posture control." },
+          { id: 322, name: "EZ Bar Curl", method: "EZ Bar", sets: 4, reps: "8–10", note: "Build core biceps power. Heavy squeeze." }
+        ]
+      },
+      {
+        day: "Fri",
+        label: "Titan Lower",
+        focus: "Heavy Quads, Hamstrings, Glutes, Core",
+        badge: "Unstoppable 🧱",
+        color: "#3FE8C8",
+        accent: "#4ffff0",
+        exercises: [
+          { id: 305, name: "Leg Press", method: "Machine", sets: 4, reps: "6-8", note: "Heavy load, do not let knees cave." },
+          { id: 306, name: "Barbell RDL", method: "Barbell", sets: 4, reps: "6-8", note: "Hinge deep, power through glutes/hamstrings." },
+          { id: 307, name: "Leg Extension Machine", method: "Machine", sets: 3, reps: "10-12", note: "Quad isolation finish." },
+          { id: 308, name: "Ab Wheel Rollout", method: "Bodyweight", sets: 3, reps: "8-12", note: "Brace core like a stone wall." }
+        ]
+      }
+    ]
+  }
 };
 
 function getExInfo(name: string): ExerciseDBItem | null {
@@ -270,14 +602,20 @@ const EXERCISE_MUSCLE_MAPPING: Record<string, string[]> = {
   "Low-to-High Cable Fly": ["Chest"],
   "Pec Deck Fly": ["Chest"],
   "Cable Chest Press": ["Chest"],
+  "Machine Chest Press": ["Chest"],
+  "Incline Machine Chest Press": ["Chest"],
+  "Single-Arm Cable Chest Press": ["Chest"],
   // Shoulders
   "Dumbbell Shoulder Press": ["Front Delts"],
   "Overhead Dumbbell Press": ["Front Delts"],
   "Smith Machine Shoulder Press": ["Front Delts"],
   "Cable Shoulder Press": ["Front Delts"],
+  "Machine Shoulder Press": ["Front Delts"],
+  "Single-Arm Dumbbell Shoulder Press": ["Front Delts"],
   "Cable Lateral Raise": ["Side Delts"],
   "Dumbbell Lateral Raise": ["Side Delts"],
   "Machine Lateral Raise": ["Side Delts"],
+  "Single-Arm Cable Lateral Raise": ["Side Delts"],
   // Back
   "Bodyweight Pull-Up": ["Lats", "Upper Back"],
   "Weighted Pull-Up": ["Lats", "Upper Back"],
@@ -293,6 +631,11 @@ const EXERCISE_MUSCLE_MAPPING: Record<string, string[]> = {
   "Chest-Supported DB Row": ["Upper Back"],
   "Single Arm Cable Row": ["Upper Back"],
   "Smith Machine Row": ["Upper Back"],
+  "T-Bar Row": ["Upper Back", "Lats"],
+  "Chest-Supported T-Bar Row": ["Upper Back"],
+  "Single-Arm Dumbbell Row": ["Lats", "Upper Back"],
+  "Single-Arm Lat Pulldown": ["Lats"],
+  "Machine Row": ["Upper Back", "Lats"],
   // Rear Delts / Traps
   "Reverse Pec Deck": ["Rear Delts"],
   "Reverse Pec Deck Fly": ["Rear Delts"],
@@ -312,8 +655,11 @@ const EXERCISE_MUSCLE_MAPPING: Record<string, string[]> = {
   "Incline DB Curl": ["Biceps"],
   "Incline Dumbbell Curl": ["Biceps"],
   "Preacher Curl": ["Biceps"],
+  "Machine Bicep Curl": ["Biceps"],
+  "Single-Arm Dumbbell Preacher Curl": ["Biceps"],
   "Hammer Curl": ["Brachialis"],
   "Cable Hammer Curl (Rope)": ["Brachialis"],
+  "Incline Hammer Curl": ["Brachialis"],
   "EZ Bar Reverse Curl": ["Brachialis"],
   "Cable Reverse Curl (Straight Bar)": ["Brachialis"],
   "Cable Reverse Curl": ["Brachialis"],
@@ -327,6 +673,8 @@ const EXERCISE_MUSCLE_MAPPING: Record<string, string[]> = {
   "Straight Bar Pushdown": ["Triceps"],
   "Straight Bar Triceps Pushdown": ["Triceps"],
   "Single Arm Cable Pushdown": ["Triceps"],
+  "Machine Tricep Extension": ["Triceps"],
+  "Single-Arm Tricep Pushdown": ["Triceps"],
   // Forearms
   "Dumbbell Wrist Curl": ["Forearms"],
   "Barbell Wrist Curl": ["Forearms"],
@@ -346,6 +694,10 @@ const EXERCISE_MUSCLE_MAPPING: Record<string, string[]> = {
   "Leg Extension Machine": ["Quads"],
   "Leg Extension": ["Quads"],
   "Dumbbell Goblet Squat": ["Quads", "Glutes"],
+  "Single-Leg Press": ["Quads", "Glutes"],
+  "Single-Leg Extension": ["Quads"],
+  "Single-Leg Curl": ["Hamstrings"],
+  "Single-Leg RDL": ["Hamstrings", "Glutes"],
   "Lying Leg Curl": ["Hamstrings"],
   "Leg Curl": ["Hamstrings"],
   "Sumo Squat": ["Glutes"],
@@ -539,7 +891,9 @@ function ReorderableExerciseItem({
   setSwapEx,
   setEditEx,
   handleOpenLog,
-  delEx
+  delEx,
+  moveExUp,
+  moveExDown
 }: {
   ex: any;
   i: number;
@@ -553,6 +907,8 @@ function ReorderableExerciseItem({
   setEditEx: any;
   handleOpenLog: any;
   delEx: any;
+  moveExUp?: (di: number, ei: number) => void;
+  moveExDown?: (di: number, ei: number) => void;
 }) {
   const dragControls = useDragControls();
   const ck = `${activeDay}-${i}`;
@@ -568,24 +924,44 @@ function ReorderableExerciseItem({
       }`}
     >
       <div className="p-5 flex gap-4 items-start">
-        {/* Drag handle (≡) icon so it's obvious */}
-        <div
-          onPointerDown={(e) => {
-            e.preventDefault();
-            dragControls.start(e);
-          }}
-          className="p-1 text-zinc-600 hover:text-zinc-400 cursor-grab active:cursor-grabbing shrink-0 select-none mt-1 touch-none"
-          title="Drag to reorder"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
+        {/* Reordering Controls (Drag + Clickable Up/Down for Zero Lag) */}
+        <div className="flex flex-col items-center gap-1 shrink-0 select-none mt-0.5">
+          <button
+            onClick={() => moveExUp && moveExUp(activeDay, i)}
+            disabled={i === 0}
+            className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white disabled:opacity-30 disabled:hover:text-zinc-500 cursor-pointer transition"
+            title="Move Up (Lag-free)"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
-          </svg>
+            <ChevronUp className="w-3 h-3" />
+          </button>
+          
+          <div
+            onPointerDown={(e) => {
+              e.preventDefault();
+              dragControls.start(e);
+            }}
+            className="p-1 text-zinc-600 hover:text-zinc-400 cursor-grab active:cursor-grabbing shrink-0 select-none touch-none"
+            title="Drag to reorder"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+            </svg>
+          </div>
+
+          <button
+            onClick={() => moveExDown && moveExDown(activeDay, i)}
+            disabled={i === (cur?.exercises?.length || 0) - 1}
+            className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white disabled:opacity-30 disabled:hover:text-zinc-500 cursor-pointer transition"
+            title="Move Down (Lag-free)"
+          >
+            <ChevronDown className="w-3 h-3" />
+          </button>
         </div>
 
         {/* Custom Animated Checkbox */}
@@ -900,7 +1276,7 @@ export default function WorkoutPlanner() {
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [activeDay, setActiveDay] = useState(0);
-  const [screen, setScreen] = useState<"workout" | "progress">("workout");
+  const [activeTab, setActiveTab] = useState<"routine" | "volume" | "explore" | "logs" | "copypaste" | "split">("routine");
   const [toast, setToast] = useState("");
 
   const [showTextEditor, setShowTextEditor] = useState(false);
@@ -989,6 +1365,31 @@ export default function WorkoutPlanner() {
     setMounted(true);
   }, []);
 
+  // Sync copy/paste rawText whenever copy/paste tab is opened
+  useEffect(() => {
+    if (activeTab === "copypaste" && plan && plan.length > 0) {
+      setRawText(serializePlanToText(plan));
+      setParseError("");
+      setCopied(false);
+    }
+  }, [activeTab, plan]);
+
+  // Register Service Worker for offline support
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => {
+            console.log("[Service Worker] Registered successfully with scope:", reg.scope);
+          })
+          .catch((err) => {
+            console.error("[Service Worker] Registration failed:", err);
+          });
+      });
+    }
+  }, []);
+
   const showToast = (m: string) => {
     setToast(m);
     setTimeout(() => setToast(""), 2200);
@@ -1037,6 +1438,32 @@ export default function WorkoutPlanner() {
     });
     updatePlan(updated);
     showToast("Removed exercise");
+  };
+
+  const moveExUp = (di: number, ei: number) => {
+    if (ei === 0) return;
+    const updated = plan.map((d, i) => {
+      if (i !== di) return d;
+      const arr = [...d.exercises];
+      const temp = arr[ei];
+      arr[ei] = arr[ei - 1];
+      arr[ei - 1] = temp;
+      return { ...d, exercises: arr };
+    });
+    updatePlan(updated);
+  };
+
+  const moveExDown = (di: number, ei: number) => {
+    const updated = plan.map((d, i) => {
+      if (i !== di) return d;
+      if (ei >= d.exercises.length - 1) return d;
+      const arr = [...d.exercises];
+      const temp = arr[ei];
+      arr[ei] = arr[ei + 1];
+      arr[ei + 1] = temp;
+      return { ...d, exercises: arr };
+    });
+    updatePlan(updated);
   };
 
   const addExToDay = (di: number, exObj: any) => {
@@ -1259,6 +1686,12 @@ export default function WorkoutPlanner() {
     showToast(`Moved to ${newDayLabel} ✓`);
   };
 
+  const renameDayLabel = (di: number, newDayLabel: string) => {
+    const updated = plan.map((d, i) => (i !== di ? d : { ...d, label: newDayLabel }));
+    updatePlan(updated);
+    showToast(`Renamed workout to "${newDayLabel}" ✓`);
+  };
+
   const handleCreateCustomExercise = () => {
     if (!customExName.trim() || !addExModal) return;
     const newEx = {
@@ -1315,168 +1748,31 @@ export default function WorkoutPlanner() {
         <div className="max-w-2xl mx-auto px-4 py-5 flex items-center justify-between">
           <div>
             <div className="text-[10px] tracking-[0.2em] font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1.5">
-              <Dumbbell className="w-3.5 h-3.5 text-zinc-500" />
+              <Dumbbell className="w-3.5 h-3.5 text-zinc-500 animate-pulse" />
               <span>STRENGTH & HYPERTROPHY APP</span>
             </div>
             <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
               <span>IronPath</span>
-              <span className="text-[10px] bg-violet-500/10 text-violet-400 font-bold px-2 py-0.5 rounded-full border border-violet-500/20">v1.2</span>
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">Offline Ready ✓</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setRawText(serializePlanToText(plan));
-                setParseError("");
-                setShowTextEditor(true);
-                setCopied(false);
-              }}
-              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white transition-all border border-zinc-800/60 shadow-lg cursor-pointer"
-              title="Copy / Paste Routine"
-            >
-              <FileText className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setDayModal(true)}
-              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white transition-all border border-zinc-800/60 shadow-lg cursor-pointer"
-              title="Manage Days"
-            >
-              <CalendarDays className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setScreen((s) => (s === "workout" ? "progress" : "workout"))}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer border ${
-                screen === "progress"
-                  ? "bg-violet-600 hover:bg-violet-500 text-white border-violet-500"
-                  : "bg-zinc-900 hover:bg-zinc-800/80 text-zinc-300 hover:text-white border-zinc-800/60"
-              }`}
-            >
-              {screen === "progress" ? (
-                <>
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Workout</span>
-                </>
-              ) : (
-                <>
-                  <TrendingUp className="w-4 h-4" />
-                  <span>Logs & Progress</span>
-                </>
-              )}
-            </button>
+            <span className="text-[10px] font-black tracking-widest uppercase bg-zinc-900 border border-zinc-800/80 px-3 py-1.5 rounded-lg text-zinc-400">
+              {activeTab === "routine" && "Active Routine"}
+              {activeTab === "volume" && "Muscle Volume"}
+              {activeTab === "explore" && "Workout Plans"}
+              {activeTab === "logs" && "Progression Logs"}
+              {activeTab === "copypaste" && "Copy / Paste"}
+              {activeTab === "split" && "Split Schedule"}
+            </span>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="max-w-2xl mx-auto px-4 mt-6">
-        {/* PROGRESS SCREEN */}
-        {screen === "progress" && (
-          <div className="space-y-6">
-            <div className="bg-zinc-950/50 border border-zinc-900/80 rounded-2xl p-6 text-center shadow-xl">
-              <TrendingUp className="w-10 h-10 text-violet-400 mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-white mb-1">Performance Dashboard</h2>
-              <p className="text-zinc-500 text-xs max-w-sm mx-auto">
-                Review your session logs, custom notes, and weight progressions across configured routines.
-              </p>
-            </div>
-
-            {Object.keys(progress).length === 0 ? (
-              <div className="text-center py-16 text-zinc-600 bg-zinc-950/20 border border-zinc-900 rounded-2xl">
-                <ClipboardList className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                <h3 className="text-sm font-bold text-zinc-400 mb-1">No progression logged</h3>
-                <p className="text-xs text-zinc-500">Tap "Log" on any exercise to store your performance.</p>
-              </div>
-            ) : (
-              plan.map((d, di) => {
-                const dayLogs = d.exercises
-                  .map((ex: any) => {
-                    const key = `${di}-${ex.id}`;
-                    const sessions = progress[key] || [];
-                    return sessions.length > 0 ? { ex, key, sessions } : null;
-                  })
-                  .filter(Boolean);
-
-                if (dayLogs.length === 0) return null;
-
-                return (
-                  <div key={di} className="space-y-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                      <h3 className="text-xs font-bold tracking-wider text-zinc-400 uppercase">
-                        {d.day} — {d.label}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-3">
-                      {dayLogs.map(({ ex, key, sessions }: any) => (
-                        <div
-                          key={key}
-                          className="bg-[#121217] border border-zinc-900/80 rounded-2xl overflow-hidden shadow-md"
-                        >
-                          {/* Exercise Header */}
-                          <div className="px-5 py-4 border-b border-zinc-900 bg-zinc-950/50 flex justify-between items-center">
-                            <div>
-                              <h4 className="text-sm font-bold text-white leading-tight">{ex.name}</h4>
-                              <p className="text-[10px] text-zinc-500 mt-1 uppercase font-semibold">
-                                {ex.method} · {ex.sets} sets planned
-                              </p>
-                            </div>
-                            <span className="text-[10px] text-violet-400 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10 font-bold uppercase">
-                              {sessions.length} entry
-                            </span>
-                          </div>
-
-                          {/* Session details */}
-                          <div className="divide-y divide-zinc-900/60 max-h-80 overflow-y-auto">
-                            {[...sessions].reverse().map((session: any, si: number) => (
-                              <div key={si} className="p-4 bg-zinc-950/10">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="text-[11px] font-bold text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded">
-                                    {session.date}
-                                  </span>
-                                  <span className="text-[10px] text-zinc-500">
-                                    {(session.sets || []).length} sets logged
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-1 gap-2">
-                                  {(session.sets || []).map((s: any, j: number) => (
-                                    <div
-                                      key={j}
-                                      className="flex items-center gap-3 py-1.5 px-3 rounded-lg bg-zinc-950/50 border border-zinc-900/40 text-xs"
-                                    >
-                                      <span className="text-[10px] text-zinc-500 font-semibold w-12">
-                                        Set {s.setNum}
-                                      </span>
-                                      <span className="font-bold text-zinc-200">
-                                        {s.weight ? `${s.weight} kg` : "Bodyweight"}
-                                      </span>
-                                      <span className="text-zinc-400">×</span>
-                                      <span className="font-semibold text-zinc-300">
-                                        {s.reps} reps
-                                      </span>
-                                      {s.rpe && (
-                                        <span className="ml-auto text-[10px] text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded font-extrabold uppercase">
-                                          {s.rpe.includes("RIR") || s.rpe.toLowerCase() === "failure" ? s.rpe : `RPE ${s.rpe}`}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-
-        {/* WORKOUT SCREEN */}
-        {screen === "workout" && (
+        {/* 1. ROUTINE TAB */}
+        {activeTab === "routine" && (
           <div className="space-y-5">
             {/* Quick Horizontal Day Selectors */}
             <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -1588,6 +1884,8 @@ export default function WorkoutPlanner() {
                         setEditEx={setEditEx}
                         handleOpenLog={handleOpenLog}
                         delEx={delEx}
+                        moveExUp={moveExUp}
+                        moveExDown={moveExDown}
                       />
                     );
                   })}
@@ -1608,18 +1906,22 @@ export default function WorkoutPlanner() {
               <Plus className="w-4 h-4" />
               <span>Add Exercise</span>
             </button>
+          </div>
+        )}
 
-            {/* Weekly Muscle Volume Tracker Section */}
+        {/* 2. WEEKLY VOLUME TAB */}
+        {activeTab === "volume" && (
+          <div className="space-y-6">
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 shadow-xl text-center space-y-2">
+              <TrendingUp className="w-10 h-10 text-violet-400 mx-auto" />
+              <h2 className="text-base font-black text-white uppercase tracking-wider">Weekly Muscle Volume</h2>
+              <p className="text-zinc-400 text-xs max-w-sm mx-auto">
+                Target weekly sets per muscle group based on your active routine. Optimal hypertrophic volume is 10–20 sets per muscle per week.
+              </p>
+            </div>
+
             <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-violet-400" />
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Weekly Muscle Volume</h3>
-                </div>
-                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Sets / Week</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 {MUSCLE_LIST.map((muscle) => {
                   const volume = getWeeklyVolume();
                   const totalSets = volume[muscle] || 0;
@@ -1650,20 +1952,492 @@ export default function WorkoutPlanner() {
             </div>
           </div>
         )}
+
+        {/* 3. GOAL-BASED SUGGESTIONS TAB */}
+        {activeTab === "explore" && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-violet-950/20 to-zinc-950 border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
+              <Sparkles className="w-10 h-10 text-violet-400 mx-auto animate-pulse" />
+              <h2 className="text-base font-black text-white uppercase tracking-wider">Goal-Based Suggestions</h2>
+              <p className="text-zinc-400 text-xs max-w-sm mx-auto">
+                Need a new direction? Choose from one of our curated high-intensity training schedules. Load templates directly into your active routine.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {Object.entries(EXPLORE_TEMPLATES).map(([key, item]) => {
+                const colors = {
+                  one_punch_man: { text: "text-red-400", border: "border-red-500/20", bg: "bg-red-500/5", accent: "#ff6b54" },
+                  toji_vtaper: { text: "text-violet-400", border: "border-violet-500/20", bg: "bg-violet-500/5", accent: "#b55fff" },
+                  goku_god_tier: { text: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-500/5", accent: "#ff8454" },
+                  titan_strength: { text: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-500/5", accent: "#f5b94e" },
+                  baki_beast: { text: "text-pink-400", border: "border-pink-500/20", bg: "bg-pink-500/5", accent: "#ff5490" }
+                }[key] || { text: "text-violet-400", border: "border-zinc-800", bg: "bg-zinc-900/5", accent: "#a78bfa" };
+
+                return (
+                  <div key={key} className={`bg-[#121217] border border-zinc-900 rounded-2xl p-5 shadow-lg space-y-4 hover:border-zinc-800 transition-all`}>
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${colors.border} ${colors.text} ${colors.bg}`}>
+                          {item.goal}
+                        </span>
+                        <h3 className="text-sm md:text-base font-bold text-white mt-1.5 leading-snug">{item.name}</h3>
+                      </div>
+                      <Dumbbell className={`w-5 h-5 shrink-0 ${colors.text}`} />
+                    </div>
+
+                    <p className="text-xs text-zinc-400 leading-relaxed">{item.description}</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-zinc-950/40 p-3.5 rounded-xl border border-zinc-900/60 text-xs">
+                      <div>
+                        <div className="font-extrabold text-zinc-400 uppercase tracking-wider text-[9px] mb-1">🎯 Rep Range Tips</div>
+                        <p className="text-zinc-300 leading-normal">{item.repRangeTips}</p>
+                      </div>
+                      <div>
+                        <div className="font-extrabold text-zinc-400 uppercase tracking-wider text-[9px] mb-1">🔥 Warm-up Tips</div>
+                        <p className="text-zinc-300 leading-normal">{item.warmupTips}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 border-t border-zinc-900/80 pt-3">
+                      <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Routine Schedule Overview</div>
+                      <div className="space-y-2.5">
+                        {item.plan.map((day, idx) => (
+                          <div key={idx} className="flex flex-col gap-1 bg-zinc-950/20 border border-zinc-900/40 p-3 rounded-lg">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-black text-white px-1.5 py-0.5 rounded" style={{ backgroundColor: day.color }}>
+                                  {day.day}
+                                </span>
+                                <span className="font-bold text-zinc-200 text-xs">{day.label}</span>
+                              </div>
+                              <span className="text-[10px] text-zinc-500 font-medium">{day.focus}</span>
+                            </div>
+                            <div className="text-xs text-zinc-400 font-medium pl-10">
+                              {day.exercises.slice(0, 3).map((e) => e.name).join(", ")}
+                              {day.exercises.length > 3 && ` + ${day.exercises.length - 3} more`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        updatePlan(item.plan);
+                        setActiveDay(0);
+                        setActiveTab("routine");
+                        showToast(`Successfully loaded ${item.name}!`);
+                      }}
+                      className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-violet-900/10 animate-pulse"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Activate "{item.name}" Plan</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 4. PERFORMANCE LOGS TAB */}
+        {activeTab === "logs" && (
+          <div className="space-y-6">
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
+              <TrendingUp className="w-10 h-10 text-violet-400 mx-auto" />
+              <h2 className="text-base font-black text-white uppercase tracking-wider">Performance Dashboard</h2>
+              <p className="text-zinc-500 text-xs max-w-sm mx-auto">
+                Review your session logs, custom notes, and weight progressions across configured routines.
+              </p>
+            </div>
+
+            {Object.keys(progress).length === 0 ? (
+              <div className="text-center py-16 text-zinc-600 bg-[#121217] border border-zinc-900 rounded-2xl">
+                <ClipboardList className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+                <h3 className="text-sm font-bold text-zinc-400 mb-1">No progression logged yet</h3>
+                <p className="text-xs text-zinc-500">Tap "Log Set" on any exercise to store your performance.</p>
+              </div>
+            ) : (
+              plan.map((d, di) => {
+                const dayLogs = d.exercises
+                  .map((ex: any) => {
+                    const key = `${di}-${ex.id}`;
+                    const sessions = progress[key] || [];
+                    return sessions.length > 0 ? { ex, key, sessions } : null;
+                  })
+                  .filter(Boolean);
+
+                if (dayLogs.length === 0) return null;
+
+                return (
+                  <div key={di} className="space-y-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                      <h3 className="text-xs font-bold tracking-wider text-zinc-400 uppercase">
+                        {d.day} — {d.label}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      {dayLogs.map(({ ex, key, sessions }: any) => (
+                        <div
+                          key={key}
+                          className="bg-[#121217] border border-zinc-900/80 rounded-2xl overflow-hidden shadow-md"
+                        >
+                          {/* Exercise Header */}
+                          <div className="px-5 py-4 border-b border-zinc-900 bg-zinc-950/50 flex justify-between items-center">
+                            <div>
+                              <h4 className="text-sm font-bold text-white leading-tight">{ex.name}</h4>
+                              <p className="text-[10px] text-zinc-500 mt-1 uppercase font-semibold">
+                                {ex.method} · {ex.sets} sets planned
+                              </p>
+                            </div>
+                            <span className="text-[10px] text-violet-400 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10 font-bold uppercase">
+                              {sessions.length} entry
+                            </span>
+                          </div>
+
+                          {/* Session details */}
+                          <div className="divide-y divide-zinc-900/60 max-h-80 overflow-y-auto">
+                            {[...sessions].reverse().map((session: any, si: number) => (
+                              <div key={si} className="p-4 bg-zinc-950/10">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-[11px] font-bold text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded">
+                                    {session.date}
+                                  </span>
+                                  <span className="text-[10px] text-zinc-500">
+                                    {(session.sets || []).length} sets logged
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2">
+                                  {(session.sets || []).map((s: any, j: number) => (
+                                    <div
+                                      key={j}
+                                      className="flex items-center gap-3 py-1.5 px-3 rounded-lg bg-zinc-950/50 border border-zinc-900/40 text-xs"
+                                    >
+                                      <span className="text-[10px] text-zinc-500 font-semibold w-12">
+                                        Set {s.setNum}
+                                      </span>
+                                      <span className="font-bold text-zinc-200">
+                                        {s.weight ? `${s.weight} kg` : "Bodyweight"}
+                                      </span>
+                                      <span className="text-zinc-400">×</span>
+                                      <span className="font-semibold text-zinc-300">
+                                        {s.reps} reps
+                                      </span>
+                                      {s.rpe && (
+                                        <span className="ml-auto text-[10px] text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded font-extrabold uppercase">
+                                          {s.rpe.includes("RIR") || s.rpe.toLowerCase() === "failure" ? s.rpe : `RPE ${s.rpe}`}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* 5. COPY & PASTE ROUTINE TAB */}
+        {activeTab === "copypaste" && (
+          <div className="space-y-6">
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 shadow-xl text-center space-y-2">
+              <FileText className="w-10 h-10 text-violet-400 mx-auto" />
+              <h2 className="text-base font-black text-white uppercase tracking-wider">Fast Copy/Paste Editor</h2>
+              <p className="text-zinc-400 text-xs max-w-sm mx-auto">
+                Easily backup, transfer, or mass-update your entire training plan. Modify the text block below, then tap Save to update.
+              </p>
+            </div>
+
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-5 shadow-lg space-y-4">
+              <div className="flex flex-col sm:flex-row gap-2 justify-between items-stretch sm:items-center">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(rawText);
+                    setCopied(true);
+                    showToast("Copied routine to clipboard!");
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <Copy className="w-4 h-4 text-violet-400" />
+                  <span>{copied ? "Copied ✓" : "Copy to Clipboard"}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    try {
+                      if (!rawText.trim()) {
+                        setParseError("Text area is empty. Please enter your routine.");
+                        return;
+                      }
+                      const parsed = parseTextToPlan(rawText);
+                      if (parsed.length === 0) {
+                        setParseError("Could not find any training days in the text structure. Please follow the day header format.");
+                        return;
+                      }
+                      updatePlan(parsed);
+                      setParseError("");
+                      setActiveDay(0);
+                      setActiveTab("routine");
+                      showToast("Routine parsed & applied successfully!");
+                    } catch (e: any) {
+                      setParseError(e.message || "Failed to parse text. Please double check structure.");
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-md shadow-violet-950/40"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Save & Apply Routine</span>
+                </button>
+              </div>
+
+              {parseError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl font-medium leading-relaxed">
+                  ⚠️ {parseError}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <div className="text-[10px] uppercase font-extrabold text-zinc-500 tracking-wider">Raw Text Block</div>
+                <textarea
+                  value={rawText}
+                  onChange={(e) => setRawText(e.target.value)}
+                  className="w-full h-80 bg-zinc-950/80 border border-zinc-900 rounded-xl p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-violet-500/40 resize-y leading-relaxed"
+                  placeholder="Paste your training plan text here..."
+                />
+              </div>
+
+              <div className="bg-zinc-950/40 p-4 rounded-xl border border-zinc-900/60 text-xs space-y-2 leading-relaxed">
+                <div className="font-extrabold text-zinc-400 uppercase tracking-widest text-[9px]">Text Format Guidelines</div>
+                <p className="text-zinc-500">
+                  You can define custom split days and training blocks using standard day headers:
+                </p>
+                <code className="block p-3 bg-zinc-950 rounded-lg border border-zinc-900 text-zinc-400 text-[10px] leading-relaxed whitespace-pre-wrap">
+                  === Day: Mon | Label: Push ==={"\n"}
+                  Focus: Chest, Shoulders & Triceps{"\n"}
+                  - Incline Dumbbell Press (4 sets x 10-12 reps) [Method: Dumbbell | Group: Chest Press]{"\n"}
+                  Note: Slow eccentrics and deep stretch.
+                </code>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. SPLIT DAY MANAGER TAB */}
+        {activeTab === "split" && (
+          <div className="space-y-6">
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
+              <CalendarDays className="w-10 h-10 text-violet-400 mx-auto" />
+              <h2 className="text-base font-black text-white uppercase tracking-wider">Split Day Manager</h2>
+              <p className="text-zinc-500 text-xs max-w-sm mx-auto">
+                Rearrange training days, rename target muscle focuses, delete inactive splits, or create new workout days.
+              </p>
+            </div>
+
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-5 shadow-lg space-y-4">
+              <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider border-b border-zinc-900 pb-2">Active Training Days</div>
+              
+              <div className="space-y-2.5">
+                {plan.map((d, idx) => (
+                  <div key={idx} className="bg-zinc-950/40 border border-zinc-900 p-4 rounded-xl flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                      <div className="truncate">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-white text-xs uppercase">{d.day}</span>
+                          <span className="text-[10px] text-zinc-400 font-semibold">{d.label}</span>
+                        </div>
+                        <div className="text-[10px] text-zinc-500 truncate mt-0.5">{d.focus || "No muscle focus specified"}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => {
+                          const newDay = prompt(`Change Weekday Code (currently ${d.day}):\nUse Mon, Tue, Wed, Thu, Fri, Sat, or Sun.`, d.day);
+                          if (newDay && resolveDayAbbreviation(newDay) !== null) {
+                            moveDay(idx, resolveDayAbbreviation(newDay)!);
+                          } else if (newDay) {
+                            alert("Invalid weekday abbreviation. Please enter Mon, Tue, Wed, Thu, Fri, Sat, or Sun.");
+                          }
+                        }}
+                        className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition cursor-pointer"
+                        title="Change Weekday (e.g. Mon, Tue)"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const newLabel = prompt(`Rename Workout Name (currently "${d.label}"):\ne.g. Push, Pull, Legs, Upper, Chest Day...`, d.label);
+                          if (newLabel !== null && newLabel.trim() !== "") {
+                            renameDayLabel(idx, newLabel.trim());
+                          }
+                        }}
+                        className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition cursor-pointer"
+                        title="Rename Workout Name"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const newFocus = prompt(`Update Muscle Focus / Notes (currently "${d.focus || "none"}"):\ne.g. Chest, Shoulders & Triceps`, d.focus);
+                          if (newFocus !== null) {
+                            const updated = plan.map((pDay, pIdx) => pIdx !== idx ? pDay : { ...pDay, focus: newFocus.trim() });
+                            updatePlan(updated);
+                            showToast("Updated muscle focus ✓");
+                          }
+                        }}
+                        className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition cursor-pointer"
+                        title="Edit Target Focus / Notes"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (plan.length <= 1) {
+                            alert("You must have at least one training day in your split.");
+                            return;
+                          }
+                          if (confirm(`Are you sure you want to delete ${d.day} — ${d.label} and all of its ${d.exercises?.length || 0} exercises?`)) {
+                            removeDay(idx);
+                          }
+                        }}
+                        className="p-2 rounded-lg bg-red-500/5 border border-red-500/10 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition cursor-pointer"
+                        title="Delete Day"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-zinc-900/80 pt-4 space-y-3.5">
+                <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Quick Add New Split Day</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <button
+                    onClick={() => {
+                      const dayName = prompt("Enter day code (e.g. Mon, Tue, Wed...):", "Mon");
+                      if (dayName && resolveDayAbbreviation(dayName) !== null) {
+                        addDay(resolveDayAbbreviation(dayName)!, "Push");
+                      } else if (dayName) {
+                        alert("Invalid day name. Use Mon, Tue, Wed, Thu, Fri, Sat, or Sun.");
+                      }
+                    }}
+                    className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 font-bold text-xs text-center text-zinc-200 transition cursor-pointer"
+                  >
+                    + Add Push Day
+                  </button>
+                  <button
+                    onClick={() => {
+                      const dayName = prompt("Enter day code (e.g. Mon, Tue, Wed...):", "Wed");
+                      if (dayName && resolveDayAbbreviation(dayName) !== null) {
+                        addDay(resolveDayAbbreviation(dayName)!, "Pull");
+                      } else if (dayName) {
+                        alert("Invalid day name. Use Mon, Tue, Wed, Thu, Fri, Sat, or Sun.");
+                      }
+                    }}
+                    className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 font-bold text-xs text-center text-zinc-200 transition cursor-pointer"
+                  >
+                    + Add Pull Day
+                  </button>
+                  <button
+                    onClick={() => {
+                      const dayName = prompt("Enter day code (e.g. Mon, Tue, Wed...):", "Fri");
+                      if (dayName && resolveDayAbbreviation(dayName) !== null) {
+                        addDay(resolveDayAbbreviation(dayName)!, "Legs");
+                      } else if (dayName) {
+                        alert("Invalid day name. Use Mon, Tue, Wed, Thu, Fri, Sat, or Sun.");
+                      }
+                    }}
+                    className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 font-bold text-xs text-center text-zinc-200 transition cursor-pointer"
+                  >
+                    + Add Legs Day
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* Footer Branding */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-[#09090cdd] backdrop-blur-md border-t border-zinc-900/60 py-4 px-6 text-center z-30">
-        <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>PROGRESS MATTERS</span>
-          </span>
-          <span className="text-[10px] text-zinc-500 font-mono">
-            {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
-          </span>
+      {/* Fixed Bottom Dock Navigation (Highly detailed, touch friendly, premium layout) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0c0c11]/95 backdrop-blur-md border-t border-zinc-900/90 z-[90] px-2 py-3 shadow-[0_-10px_35px_rgba(0,0,0,0.9)]">
+        <div className="max-w-md mx-auto flex items-center justify-around select-none">
+          <button
+            onClick={() => setActiveTab("routine")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
+              activeTab === "routine" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Dumbbell className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Routine</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("volume")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
+              activeTab === "volume" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <TrendingUp className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Volume</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("explore")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
+              activeTab === "explore" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Plans</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("logs")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
+              activeTab === "logs" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <ClipboardList className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Logs</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("copypaste")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
+              activeTab === "copypaste" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Paste</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("split")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
+              activeTab === "split" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <CalendarDays className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Split</span>
+          </button>
         </div>
-      </footer>
+      </div>
 
       {/* ────────────────── MODALS ────────────────── */}
 

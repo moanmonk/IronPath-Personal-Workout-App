@@ -1,0 +1,24 @@
+{
+  "name": "Workout Planner & Progress Tracker",
+  "short_name": "Workout Planner",
+  "description": "An advanced, fully customizable workout planner and progress tracker for strength training and bodybuilding.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0c10",
+  "theme_color": "#0c0c10",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

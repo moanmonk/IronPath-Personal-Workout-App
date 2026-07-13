@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Workout Planner & Progress Tracker",
   description: "An advanced, fully customizable workout planner and progress tracker for strength training and bodybuilding.",
+  manifest: "/manifest.json",
   icons: {
     icon: "/apple-touch-icon.png",
     shortcut: "/apple-touch-icon.png",
