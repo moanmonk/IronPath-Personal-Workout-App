@@ -22,7 +22,10 @@ import {
   Copy,
   FileText,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Zap,
+  Flame,
+  Palette
 } from "lucide-react";
 
 // ─── CONSTANTS & DATABASES ──────────────────────────────────────────────────
@@ -748,6 +751,29 @@ function getMusclesForExercise(ex: any): string[] {
   return [];
 }
 
+function getMuscleBadgeStyles(muscle: string) {
+  const m = muscle.toLowerCase();
+  if (m.includes("chest")) {
+    return "bg-rose-500/10 text-rose-400 border-rose-500/15";
+  }
+  if (m.includes("back") || m.includes("lat") || m.includes("row")) {
+    return "bg-sky-500/10 text-sky-400 border-sky-500/15";
+  }
+  if (m.includes("quad") || m.includes("hamstring") || m.includes("glute") || m.includes("leg") || m.includes("calve") || m.includes("calf")) {
+    return "bg-amber-500/10 text-amber-400 border-amber-500/15";
+  }
+  if (m.includes("shoulder") || m.includes("delt")) {
+    return "bg-purple-500/10 text-purple-400 border-purple-500/15";
+  }
+  if (m.includes("bicep") || m.includes("tricep") || m.includes("arm") || m.includes("forearm") || m.includes("brachial")) {
+    return "bg-emerald-500/10 text-emerald-400 border-emerald-500/15";
+  }
+  if (m.includes("abs") || m.includes("core")) {
+    return "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/15";
+  }
+  return "bg-cyan-500/10 text-cyan-400 border-cyan-500/15";
+}
+
 function getVolumeStatus(sets: number) {
   if (sets === 0) {
     return {
@@ -893,7 +919,8 @@ function ReorderableExerciseItem({
   handleOpenLog,
   delEx,
   moveExUp,
-  moveExDown
+  moveExDown,
+  themeStyles
 }: {
   ex: any;
   i: number;
@@ -909,6 +936,7 @@ function ReorderableExerciseItem({
   delEx: any;
   moveExUp?: (di: number, ei: number) => void;
   moveExDown?: (di: number, ei: number) => void;
+  themeStyles: any;
 }) {
   const dragControls = useDragControls();
   const ck = `${activeDay}-${i}`;
@@ -1018,7 +1046,7 @@ function ReorderableExerciseItem({
             {getMusclesForExercise(ex).map((m) => (
               <span
                 key={m}
-                className="text-[9px] font-semibold bg-violet-500/5 text-violet-400 px-1.5 py-0.5 rounded border border-violet-500/10 uppercase"
+                className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide ${getMuscleBadgeStyles(m)}`}
               >
                 {m}
               </span>
@@ -1276,8 +1304,9 @@ export default function WorkoutPlanner() {
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [activeDay, setActiveDay] = useState(0);
-  const [activeTab, setActiveTab] = useState<"routine" | "volume" | "explore" | "logs" | "copypaste" | "split">("routine");
+  const [activeTab, setActiveTab] = useState<"routine" | "volume" | "explore" | "logs" | "copypaste" | "split" | "theme">("routine");
   const [toast, setToast] = useState("");
+  const [activeTheme, setActiveTheme] = useState<"purple" | "red" | "orange" | "yellow" | "zinc" | "emerald" | "cyan" | "pink" | "amber">("purple");
 
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [rawText, setRawText] = useState("");
@@ -1340,6 +1369,13 @@ export default function WorkoutPlanner() {
     const savedProgress = localStorage.getItem("wp-progress");
     const savedChecked = localStorage.getItem("wp-checked");
     const savedLastDate = localStorage.getItem("wp-last-checked-date");
+    const savedTheme = localStorage.getItem("wp-theme");
+
+    if (savedTheme) {
+      setActiveTheme(savedTheme as any);
+    } else {
+      setActiveTheme("purple");
+    }
 
     const todayStr = new Date().toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -1394,6 +1430,219 @@ export default function WorkoutPlanner() {
     setToast(m);
     setTimeout(() => setToast(""), 2200);
   };
+
+  const handleThemeChange = (t: "purple" | "red" | "orange" | "yellow" | "zinc" | "emerald" | "cyan" | "pink" | "amber") => {
+    setActiveTheme(t);
+    localStorage.setItem("wp-theme", t);
+    showToast(`Theme updated to ${t.toUpperCase()} ✓`);
+  };
+
+  // Theme Configuration
+  const getThemeConfig = () => {
+    const configs = {
+      purple: {
+        text: "text-violet-400",
+        textHover: "hover:text-violet-300",
+        bg: "bg-violet-600",
+        bgHover: "hover:bg-violet-500",
+        border: "border-violet-500",
+        borderFocus: "focus:border-violet-500",
+        borderFocusRing: "focus:ring-violet-500/30",
+        bgLight: "bg-violet-600/15",
+        bgLightHover: "hover:bg-violet-600/20",
+        borderLight: "border-violet-500/10",
+        borderLight15: "border-violet-500/15",
+        shadow: "shadow-violet-950/40",
+        shadowGlow: "shadow-violet-500/10",
+        hex: "#b55fff",
+        hexMuted: "#a78bfa",
+        engine: "HEAVENLY RESTRICTION ENGINE",
+        badge: "DEMON BACK ✓",
+        gradient: "from-violet-500 via-fuchsia-500 to-indigo-500",
+        badgeColor: "text-violet-400 border-violet-500/20 bg-violet-500/10",
+        engineColor: "text-violet-500"
+      },
+      red: {
+        text: "text-red-400",
+        textHover: "hover:text-red-300",
+        bg: "bg-red-600",
+        bgHover: "hover:bg-red-500",
+        border: "border-red-500",
+        borderFocus: "focus:border-red-500",
+        borderFocusRing: "focus:ring-red-500/30",
+        bgLight: "bg-red-600/15",
+        bgLightHover: "hover:bg-red-600/20",
+        borderLight: "border-red-500/10",
+        borderLight15: "border-red-500/15",
+        shadow: "shadow-red-950/40",
+        shadowGlow: "shadow-red-500/10",
+        hex: "#ff5454",
+        hexMuted: "#f87171",
+        engine: "KAIOKEN ENGINE",
+        badge: "LIMITLESS POWER ✓",
+        gradient: "from-red-500 via-orange-500 to-yellow-500",
+        badgeColor: "text-red-400 border-red-500/20 bg-red-500/10",
+        engineColor: "text-red-500"
+      },
+      orange: {
+        text: "text-orange-400",
+        textHover: "hover:text-orange-300",
+        bg: "bg-orange-600",
+        bgHover: "hover:bg-orange-500",
+        border: "border-orange-500",
+        borderFocus: "focus:border-orange-500",
+        borderFocusRing: "focus:ring-orange-500/30",
+        bgLight: "bg-orange-600/15",
+        bgLightHover: "hover:bg-orange-600/20",
+        borderLight: "border-orange-500/10",
+        borderLight15: "border-orange-500/15",
+        shadow: "shadow-orange-950/40",
+        shadowGlow: "shadow-orange-500/10",
+        hex: "#ff8454",
+        hexMuted: "#fb923c",
+        engine: "SAIYAN GOD ENGINE",
+        badge: "GOD-TIER ULTRA ✓",
+        gradient: "from-orange-500 via-red-500 to-yellow-500",
+        badgeColor: "text-orange-400 border-orange-500/20 bg-orange-500/10",
+        engineColor: "text-orange-500"
+      },
+      yellow: {
+        text: "text-yellow-400",
+        textHover: "hover:text-yellow-300",
+        bg: "bg-yellow-500",
+        bgHover: "hover:bg-yellow-400",
+        border: "border-yellow-500",
+        borderFocus: "focus:border-yellow-500",
+        borderFocusRing: "focus:ring-yellow-500/30",
+        bgLight: "bg-yellow-500/15",
+        bgLightHover: "hover:bg-yellow-500/20",
+        borderLight: "border-yellow-500/10",
+        borderLight15: "border-yellow-500/15",
+        shadow: "shadow-yellow-950/40",
+        shadowGlow: "shadow-yellow-500/10",
+        hex: "#facc15",
+        hexMuted: "#fef08a",
+        engine: "LIMITER BREAKER ENGINE",
+        badge: "ONE PUNCH WORKOUT ✓",
+        gradient: "from-yellow-400 via-orange-500 to-red-500",
+        badgeColor: "text-yellow-400 border-yellow-500/20 bg-yellow-500/10",
+        engineColor: "text-yellow-500"
+      },
+      zinc: {
+        text: "text-zinc-400",
+        textHover: "hover:text-zinc-300",
+        bg: "bg-zinc-600",
+        bgHover: "hover:bg-zinc-500",
+        border: "border-zinc-500",
+        borderFocus: "focus:border-zinc-500",
+        borderFocusRing: "focus:ring-zinc-500/30",
+        bgLight: "bg-zinc-600/15",
+        bgLightHover: "hover:bg-zinc-600/20",
+        borderLight: "border-zinc-500/10",
+        borderLight15: "border-zinc-500/15",
+        shadow: "shadow-zinc-950/40",
+        shadowGlow: "shadow-zinc-500/10",
+        hex: "#a1a1aa",
+        hexMuted: "#cbd5e1",
+        engine: "CUSTOM HYBRID ENGINE",
+        badge: "ELITE STRENGTH ✓",
+        gradient: "from-zinc-400 via-zinc-200 to-zinc-500",
+        badgeColor: "text-zinc-400 border-zinc-800 bg-zinc-900/50",
+        engineColor: "text-zinc-400"
+      },
+      emerald: {
+        text: "text-emerald-400",
+        textHover: "hover:text-emerald-300",
+        bg: "bg-emerald-600",
+        bgHover: "hover:bg-emerald-500",
+        border: "border-emerald-500",
+        borderFocus: "focus:border-emerald-500",
+        borderFocusRing: "focus:ring-emerald-500/30",
+        bgLight: "bg-emerald-600/15",
+        bgLightHover: "hover:bg-emerald-600/20",
+        borderLight: "border-emerald-500/10",
+        borderLight15: "border-emerald-500/15",
+        shadow: "shadow-emerald-950/40",
+        shadowGlow: "shadow-emerald-500/10",
+        hex: "#10b981",
+        hexMuted: "#34d399",
+        engine: "BEAST MODE ENGINE",
+        badge: "FULL COWL OVERDRIVE ✓",
+        gradient: "from-emerald-500 via-teal-500 to-green-500",
+        badgeColor: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10",
+        engineColor: "text-emerald-500"
+      },
+      cyan: {
+        text: "text-cyan-400",
+        textHover: "hover:text-cyan-300",
+        bg: "bg-cyan-600",
+        bgHover: "hover:bg-cyan-500",
+        border: "border-cyan-500",
+        borderFocus: "focus:border-cyan-500",
+        borderFocusRing: "focus:ring-cyan-500/30",
+        bgLight: "bg-cyan-600/15",
+        bgLightHover: "hover:bg-cyan-600/20",
+        borderLight: "border-cyan-500/10",
+        borderLight15: "border-cyan-500/15",
+        shadow: "shadow-cyan-950/40",
+        shadowGlow: "shadow-cyan-500/10",
+        hex: "#06b6d4",
+        hexMuted: "#22d3ee",
+        engine: "SUPER SAIYAN BLUE ENGINE",
+        badge: "ULTRA INSTINCT ✓",
+        gradient: "from-cyan-500 via-blue-500 to-indigo-500",
+        badgeColor: "text-cyan-400 border-cyan-500/20 bg-cyan-500/10",
+        engineColor: "text-cyan-500"
+      },
+      pink: {
+        text: "text-pink-400",
+        textHover: "hover:text-pink-300",
+        bg: "bg-pink-600",
+        bgHover: "hover:bg-pink-500",
+        border: "border-pink-500",
+        borderFocus: "focus:border-pink-500",
+        borderFocusRing: "focus:ring-pink-500/30",
+        bgLight: "bg-pink-600/15",
+        bgLightHover: "hover:bg-pink-600/20",
+        borderLight: "border-pink-500/10",
+        borderLight15: "border-pink-500/15",
+        shadow: "shadow-pink-950/40",
+        shadowGlow: "shadow-pink-500/10",
+        hex: "#ec4899",
+        hexMuted: "#f472b6",
+        engine: "DEMON BACK ENGINE",
+        badge: "PINK ROSE OVERLOAD ✓",
+        gradient: "from-pink-500 via-rose-500 to-purple-500",
+        badgeColor: "text-pink-400 border-pink-500/20 bg-pink-500/10",
+        engineColor: "text-pink-500"
+      },
+      amber: {
+        text: "text-amber-400",
+        textHover: "hover:text-amber-300",
+        bg: "bg-amber-600",
+        bgHover: "hover:bg-amber-500",
+        border: "border-amber-500",
+        borderFocus: "focus:border-amber-500",
+        borderFocusRing: "focus:ring-amber-500/30",
+        bgLight: "bg-amber-600/15",
+        bgLightHover: "hover:bg-amber-600/20",
+        borderLight: "border-amber-500/10",
+        borderLight15: "border-amber-500/15",
+        shadow: "shadow-amber-950/40",
+        shadowGlow: "shadow-amber-500/10",
+        hex: "#f59e0b",
+        hexMuted: "#fbbf24",
+        engine: "GOLDEN FRIEZA ENGINE",
+        badge: "SUPER SAIYAN GOLD ✓",
+        gradient: "from-amber-500 via-yellow-500 to-orange-500",
+        badgeColor: "text-amber-400 border-amber-500/20 bg-amber-500/10",
+        engineColor: "text-amber-500"
+      }
+    };
+    return configs[activeTheme] || configs.purple;
+  };
+
+  const themeStyles = getThemeConfig();
 
   const updatePlan = (newPlan: any[]) => {
     const sorted = sortPlanByDays(newPlan);
@@ -1711,7 +1960,7 @@ export default function WorkoutPlanner() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[#09090c] flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
+        <div className={`w-12 h-12 border-4 ${themeStyles.borderLight15} border-t-current ${themeStyles.text} rounded-full animate-spin`} />
         <div className="text-zinc-500 text-sm font-medium">Initializing workout plan...</div>
       </div>
     );
@@ -1726,6 +1975,20 @@ export default function WorkoutPlanner() {
   const addModal = addExModal;
   const muscleExercises = addModal?.muscle ? EXERCISE_DB[addModal.muscle] || [] : [];
 
+  // Determine active anime template branding dynamically
+  const activeTemplateKey = Object.entries(EXPLORE_TEMPLATES).find(([_, item]) => {
+    return plan.length === item.plan.length && plan.every((day, idx) => day.label === item.plan[idx]?.label);
+  })?.[0];
+
+  const brandTheme = {
+    engine: themeStyles.engine,
+    title: "IRONPATH",
+    gradient: themeStyles.gradient,
+    badge: themeStyles.badge,
+    badgeColor: themeStyles.badgeColor,
+    engineColor: themeStyles.engineColor
+  };
+
   return (
     <div className="min-h-screen bg-[#09090c] text-[#e0e0e0] font-sans pb-32">
       {/* Toast Notification */}
@@ -1735,9 +1998,9 @@ export default function WorkoutPlanner() {
             initial={{ opacity: 0, y: -20, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: -20, x: "-50%" }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 text-violet-400 px-5 py-3 rounded-xl text-xs font-semibold z-[9999] shadow-2xl flex items-center gap-2 whitespace-nowrap"
+            className={`fixed top-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 ${themeStyles.text} px-5 py-3 rounded-xl text-xs font-semibold z-[9999] shadow-2xl flex items-center gap-2 whitespace-nowrap`}
           >
-            <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
+            <Sparkles className={`w-4 h-4 ${themeStyles.text} animate-pulse`} />
             <span>{toast}</span>
           </motion.div>
         )}
@@ -1745,25 +2008,31 @@ export default function WorkoutPlanner() {
 
       {/* Hero Header */}
       <header className="border-b border-zinc-900 bg-zinc-950/40 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-5 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] tracking-[0.2em] font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1.5">
-              <Dumbbell className="w-3.5 h-3.5 text-zinc-500 animate-pulse" />
-              <span>STRENGTH & HYPERTROPHY APP</span>
+        <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <div className={`text-[9px] sm:text-[10px] tracking-[0.2em] font-extrabold ${brandTheme.engineColor} uppercase mb-1 flex items-center gap-1.5 truncate`}>
+              <Flame className={`w-3.5 h-3.5 ${brandTheme.engineColor} animate-pulse fill-current/10 shrink-0`} />
+              <span className="truncate">{brandTheme.engine}</span>
             </div>
-            <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
-              <span>IronPath</span>
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">Offline Ready ✓</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-white flex items-center gap-2 flex-wrap">
+              <span className={`bg-gradient-to-r ${brandTheme.gradient} bg-clip-text text-transparent uppercase font-black tracking-tight shrink-0`}>
+                {brandTheme.title}
+              </span>
+              <span className={`text-[8px] sm:text-[9px] font-bold tracking-widest border px-2 py-0.5 rounded-full uppercase shrink-0 ${brandTheme.badgeColor}`}>
+                {brandTheme.badge}
+              </span>
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black tracking-widest uppercase bg-zinc-900 border border-zinc-800/80 px-3 py-1.5 rounded-lg text-zinc-400">
-              {activeTab === "routine" && "Active Routine"}
-              {activeTab === "volume" && "Muscle Volume"}
-              {activeTab === "explore" && "Workout Plans"}
-              {activeTab === "logs" && "Progression Logs"}
-              {activeTab === "copypaste" && "Copy / Paste"}
-              {activeTab === "split" && "Split Schedule"}
+          
+          <div className="flex items-center gap-3 shrink-0 self-start sm:self-center">
+            <span className="text-[9px] font-black tracking-widest uppercase bg-zinc-900 border border-zinc-800/80 px-2.5 py-1.5 rounded-lg text-zinc-400">
+              {activeTab === "routine" && "Routine"}
+              {activeTab === "volume" && "Volume"}
+              {activeTab === "explore" && "Plans"}
+              {activeTab === "logs" && "Logs"}
+              {activeTab === "copypaste" && "Sync"}
+              {activeTab === "split" && "Split"}
+              {activeTab === "theme" && "Theme"}
             </span>
           </div>
         </div>
@@ -1886,6 +2155,7 @@ export default function WorkoutPlanner() {
                         delEx={delEx}
                         moveExUp={moveExUp}
                         moveExDown={moveExDown}
+                        themeStyles={themeStyles}
                       />
                     );
                   })}
@@ -1913,7 +2183,7 @@ export default function WorkoutPlanner() {
         {activeTab === "volume" && (
           <div className="space-y-6">
             <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 shadow-xl text-center space-y-2">
-              <TrendingUp className="w-10 h-10 text-violet-400 mx-auto" />
+              <TrendingUp className={`w-10 h-10 ${themeStyles.text} mx-auto`} />
               <h2 className="text-base font-black text-white uppercase tracking-wider">Weekly Muscle Volume</h2>
               <p className="text-zinc-400 text-xs max-w-sm mx-auto">
                 Target weekly sets per muscle group based on your active routine. Optimal hypertrophic volume is 10–20 sets per muscle per week.
@@ -1956,8 +2226,9 @@ export default function WorkoutPlanner() {
         {/* 3. GOAL-BASED SUGGESTIONS TAB */}
         {activeTab === "explore" && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-violet-950/20 to-zinc-950 border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
-              <Sparkles className="w-10 h-10 text-violet-400 mx-auto animate-pulse" />
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2 relative overflow-hidden">
+              <div className="absolute inset-0 bg-radial pointer-events-none" style={{ background: `radial-gradient(circle at center, ${themeStyles.hex}08, transparent 70%)` }} />
+              <Sparkles className={`w-10 h-10 ${themeStyles.text} mx-auto animate-pulse`} />
               <h2 className="text-base font-black text-white uppercase tracking-wider">Goal-Based Suggestions</h2>
               <p className="text-zinc-400 text-xs max-w-sm mx-auto">
                 Need a new direction? Choose from one of our curated high-intensity training schedules. Load templates directly into your active routine.
@@ -1966,16 +2237,25 @@ export default function WorkoutPlanner() {
 
             <div className="space-y-4">
               {Object.entries(EXPLORE_TEMPLATES).map(([key, item]) => {
-                const colors = {
+                const colorsMap: Record<string, { text: string; border: string; bg: string; accent: string }> = {
                   one_punch_man: { text: "text-red-400", border: "border-red-500/20", bg: "bg-red-500/5", accent: "#ff6b54" },
                   toji_vtaper: { text: "text-violet-400", border: "border-violet-500/20", bg: "bg-violet-500/5", accent: "#b55fff" },
                   goku_god_tier: { text: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-500/5", accent: "#ff8454" },
                   titan_strength: { text: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-500/5", accent: "#f5b94e" },
                   baki_beast: { text: "text-pink-400", border: "border-pink-500/20", bg: "bg-pink-500/5", accent: "#ff5490" }
-                }[key] || { text: "text-violet-400", border: "border-zinc-800", bg: "bg-zinc-900/5", accent: "#a78bfa" };
+                };
+                const colors = colorsMap[key] || { text: "text-violet-400", border: "border-zinc-800", bg: "bg-zinc-900/5", accent: "#a78bfa" };
+
+                const planColor = item.plan[0]?.color || "#a78bfa";
+                const planAccent = item.plan[0]?.accent || "#c084fc";
+                const isCurrentPlanActive = plan.length === item.plan.length && plan.every((day, idx) => day.label === item.plan[idx]?.label);
 
                 return (
-                  <div key={key} className={`bg-[#121217] border border-zinc-900 rounded-2xl p-5 shadow-lg space-y-4 hover:border-zinc-800 transition-all`}>
+                  <div 
+                    key={key} 
+                    className="bg-[#121217] border rounded-2xl p-5 shadow-lg space-y-4 hover:border-zinc-700 transition-all duration-300"
+                    style={{ borderColor: isCurrentPlanActive ? `${planColor}60` : "rgb(24, 24, 27)" }}
+                  >
                     <div className="flex justify-between items-start gap-2">
                       <div>
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${colors.border} ${colors.text} ${colors.bg}`}>
@@ -2022,18 +2302,38 @@ export default function WorkoutPlanner() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        updatePlan(item.plan);
-                        setActiveDay(0);
-                        setActiveTab("routine");
-                        showToast(`Successfully loaded ${item.name}!`);
-                      }}
-                      className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-violet-900/10 animate-pulse"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Activate "{item.name}" Plan</span>
-                    </button>
+                    {isCurrentPlanActive ? (
+                      <button
+                        disabled
+                        style={{
+                          borderColor: `${planColor}30`,
+                          color: planAccent,
+                          backgroundColor: `${planColor}15`
+                        }}
+                        className="w-full py-3.5 px-4 font-extrabold text-xs rounded-xl border flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        <Check className="w-4 h-4 shrink-0" style={{ color: planAccent }} />
+                        <span className="text-center leading-normal uppercase tracking-wider">
+                          Active Routine ✓
+                        </span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          updatePlan(item.plan);
+                          setActiveDay(0);
+                          setActiveTab("routine");
+                          showToast(`Successfully loaded ${item.name}!`);
+                        }}
+                        style={{ backgroundColor: planColor }}
+                        className="w-full py-3.5 px-4 text-zinc-950 font-black text-xs rounded-xl transition hover:opacity-95 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-black/20"
+                      >
+                        <Sparkles className="w-4 h-4 shrink-0 text-zinc-950" />
+                        <span className="text-center leading-normal whitespace-normal break-words max-w-[calc(100%-24px)] uppercase tracking-wider">
+                          Activate {item.name.split(" (")[0]}
+                        </span>
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -2045,7 +2345,7 @@ export default function WorkoutPlanner() {
         {activeTab === "logs" && (
           <div className="space-y-6">
             <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
-              <TrendingUp className="w-10 h-10 text-violet-400 mx-auto" />
+              <TrendingUp className={`w-10 h-10 ${themeStyles.text} mx-auto`} />
               <h2 className="text-base font-black text-white uppercase tracking-wider">Performance Dashboard</h2>
               <p className="text-zinc-500 text-xs max-w-sm mx-auto">
                 Review your session logs, custom notes, and weight progressions across configured routines.
@@ -2093,7 +2393,7 @@ export default function WorkoutPlanner() {
                                 {ex.method} · {ex.sets} sets planned
                               </p>
                             </div>
-                            <span className="text-[10px] text-violet-400 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10 font-bold uppercase">
+                            <span className={`text-[10px] ${themeStyles.text} ${themeStyles.bgLight} px-2.5 py-1 rounded-md border ${themeStyles.borderLight} font-bold uppercase`}>
                               {sessions.length} entry
                             </span>
                           </div>
@@ -2103,7 +2403,7 @@ export default function WorkoutPlanner() {
                             {[...sessions].reverse().map((session: any, si: number) => (
                               <div key={si} className="p-4 bg-zinc-950/10">
                                 <div className="flex justify-between items-center mb-2">
-                                  <span className="text-[11px] font-bold text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded">
+                                  <span className={`text-[11px] font-bold ${themeStyles.text} ${themeStyles.bgLight} border ${themeStyles.borderLight} px-2 py-0.5 rounded`}>
                                     {session.date}
                                   </span>
                                   <span className="text-[10px] text-zinc-500">
@@ -2127,7 +2427,7 @@ export default function WorkoutPlanner() {
                                         {s.reps} reps
                                       </span>
                                       {s.rpe && (
-                                        <span className="ml-auto text-[10px] text-violet-400 bg-violet-500/5 border border-violet-500/10 px-2 py-0.5 rounded font-extrabold uppercase">
+                                        <span className={`ml-auto text-[10px] ${themeStyles.text} ${themeStyles.bgLight} border ${themeStyles.borderLight} px-2 py-0.5 rounded font-extrabold uppercase`}>
                                           {s.rpe.includes("RIR") || s.rpe.toLowerCase() === "failure" ? s.rpe : `RPE ${s.rpe}`}
                                         </span>
                                       )}
@@ -2151,7 +2451,7 @@ export default function WorkoutPlanner() {
         {activeTab === "copypaste" && (
           <div className="space-y-6">
             <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 shadow-xl text-center space-y-2">
-              <FileText className="w-10 h-10 text-violet-400 mx-auto" />
+              <FileText className={`w-10 h-10 ${themeStyles.text} mx-auto`} />
               <h2 className="text-base font-black text-white uppercase tracking-wider">Fast Copy/Paste Editor</h2>
               <p className="text-zinc-400 text-xs max-w-sm mx-auto">
                 Easily backup, transfer, or mass-update your entire training plan. Modify the text block below, then tap Save to update.
@@ -2169,7 +2469,7 @@ export default function WorkoutPlanner() {
                   }}
                   className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
                 >
-                  <Copy className="w-4 h-4 text-violet-400" />
+                  <Copy className={`w-4 h-4 ${themeStyles.text}`} />
                   <span>{copied ? "Copied ✓" : "Copy to Clipboard"}</span>
                 </button>
 
@@ -2194,7 +2494,7 @@ export default function WorkoutPlanner() {
                       setParseError(e.message || "Failed to parse text. Please double check structure.");
                     }
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-md shadow-violet-950/40"
+                  className={`px-5 py-2.5 rounded-xl ${themeStyles.bg} ${themeStyles.bgHover} text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-md ${themeStyles.shadow}`}
                 >
                   <Check className="w-4 h-4" />
                   <span>Save & Apply Routine</span>
@@ -2212,7 +2512,7 @@ export default function WorkoutPlanner() {
                 <textarea
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
-                  className="w-full h-80 bg-zinc-950/80 border border-zinc-900 rounded-xl p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-violet-500/40 resize-y leading-relaxed"
+                  className={`w-full h-80 bg-zinc-950/80 border border-zinc-900 rounded-xl p-4 text-xs font-mono text-zinc-300 focus:outline-none ${themeStyles.borderFocus} resize-y leading-relaxed`}
                   placeholder="Paste your training plan text here..."
                 />
               </div>
@@ -2237,7 +2537,7 @@ export default function WorkoutPlanner() {
         {activeTab === "split" && (
           <div className="space-y-6">
             <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
-              <CalendarDays className="w-10 h-10 text-violet-400 mx-auto" />
+              <CalendarDays className={`w-10 h-10 ${themeStyles.text} mx-auto`} />
               <h2 className="text-base font-black text-white uppercase tracking-wider">Split Day Manager</h2>
               <p className="text-zinc-500 text-xs max-w-sm mx-auto">
                 Rearrange training days, rename target muscle focuses, delete inactive splits, or create new workout days.
@@ -2372,6 +2672,86 @@ export default function WorkoutPlanner() {
             </div>
           </div>
         )}
+
+        {/* 7. THEME CUSTOMIZATION TAB */}
+        {activeTab === "theme" && (
+          <div className="space-y-6">
+            <div className="bg-[#121217] border border-zinc-900 rounded-2xl p-6 text-center shadow-xl space-y-2">
+              <Sparkles className={`w-10 h-10 ${themeStyles.text} mx-auto animate-pulse`} />
+              <h2 className="text-base font-black text-white uppercase tracking-wider">Aesthetic Customizer</h2>
+              <p className="text-zinc-500 text-xs max-w-sm mx-auto">
+                Select your power engine. Every engine completely alters the visual highlights, borders, energy glow, and dashboard graphics of your workout planner.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-8">
+              {Object.entries({
+                purple: { name: "Purple Toji", desc: "Heavy physical prowess inspired by Heavenly Restriction.", badge: "DEMON BACK ✓", class: "bg-violet-600" },
+                red: { name: "Red Kaioken", desc: "A fiery red theme designed for multiplying speed, focus, and training output.", badge: "LIMITLESS POWER ✓", class: "bg-red-600" },
+                orange: { name: "Orange Goku", desc: "A bright godly orange aesthetic designed for transcending physical thresholds.", badge: "GOD-TIER ULTRA ✓", class: "bg-orange-600" },
+                yellow: { name: "Yellow Saitama", desc: "A powerful yellow theme designed for breaking limits and explosive force.", badge: "ONE PUNCH WORKOUT ✓", class: "bg-yellow-500" },
+                emerald: { name: "Emerald Beast", desc: "A high-intensity green theme optimized for raw speed and beast mode adaptation.", badge: "FULL COWL OVERDRIVE ✓", class: "bg-emerald-600" },
+                cyan: { name: "Cyan UI", desc: "An ice-blue theme focusing on effortless muscle coordination and cosmic flows.", badge: "ULTRA INSTINCT ✓", class: "bg-cyan-600" },
+                pink: { name: "Pink Rose", desc: "A stylish fuchsia/pink theme celebrating high-fashion power and aesthetic cuts.", badge: "PINK ROSE OVERLOAD ✓", class: "bg-pink-600" },
+                amber: { name: "Golden Frieza", desc: "A brilliant golden theme highlighting absolute confidence and premium heavy lifts.", badge: "SUPER SAIYAN GOLD ✓", class: "bg-amber-600" },
+                zinc: { name: "Classic Zinc", desc: "A pure technical slate hybrid design focused purely on raw biomechanical data.", badge: "ELITE STRENGTH ✓", class: "bg-zinc-600" },
+              }).map(([key, t]) => {
+                const isSelected = activeTheme === key;
+                const cardTheme = key === "purple" ? { text: "text-violet-400", bgLight: "bg-violet-600/10", border: "border-violet-500/20" }
+                  : key === "red" ? { text: "text-red-400", bgLight: "bg-red-600/10", border: "border-red-500/20" }
+                  : key === "orange" ? { text: "text-orange-400", bgLight: "bg-orange-600/10", border: "border-orange-500/20" }
+                  : key === "yellow" ? { text: "text-yellow-400", bgLight: "bg-yellow-500/10", border: "border-yellow-500/20" }
+                  : key === "emerald" ? { text: "text-emerald-400", bgLight: "bg-emerald-600/10", border: "border-emerald-500/20" }
+                  : key === "cyan" ? { text: "text-cyan-400", bgLight: "bg-cyan-600/10", border: "border-cyan-500/20" }
+                  : key === "pink" ? { text: "text-pink-400", bgLight: "bg-pink-600/10", border: "border-pink-500/20" }
+                  : key === "amber" ? { text: "text-amber-400", bgLight: "bg-amber-600/10", border: "border-amber-500/20" }
+                  : { text: "text-zinc-400", bgLight: "bg-zinc-600/10", border: "border-zinc-850" };
+
+                const borderSelected = key === "purple" ? "border-violet-500 ring-1 ring-violet-500/20 shadow-violet-500/5"
+                  : key === "red" ? "border-red-500 ring-1 ring-red-500/20 shadow-red-500/5"
+                  : key === "orange" ? "border-orange-500 ring-1 ring-orange-500/20 shadow-orange-500/5"
+                  : key === "yellow" ? "border-yellow-500 ring-1 ring-yellow-500/20 shadow-yellow-500/5"
+                  : key === "emerald" ? "border-emerald-500 ring-1 ring-emerald-500/20 shadow-emerald-500/5"
+                  : key === "cyan" ? "border-cyan-500 ring-1 ring-cyan-500/20 shadow-cyan-500/5"
+                  : key === "pink" ? "border-pink-500 ring-1 ring-pink-500/20 shadow-pink-500/5"
+                  : key === "amber" ? "border-amber-500 ring-1 ring-amber-500/20 shadow-amber-500/5"
+                  : "border-zinc-500 ring-1 ring-zinc-500/20 shadow-zinc-500/5";
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleThemeChange(key as any)}
+                    className={`text-left p-5 rounded-2xl border transition relative flex flex-col justify-between h-42 cursor-pointer ${
+                      isSelected
+                        ? `bg-zinc-900 border-2 ${borderSelected} shadow-[0_4px_25px_rgba(0,0,0,0.4)]`
+                        : "bg-zinc-950 hover:bg-zinc-900/60 border-zinc-900/80 hover:border-zinc-800"
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3.5 h-3.5 rounded-full ${t.class} border border-white/20`} />
+                        <span className="text-sm font-black text-white">{t.name}</span>
+                        {isSelected && (
+                          <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold bg-white/10 ${cardTheme.text}`}>
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-zinc-500 text-[11px] leading-relaxed pr-6">{t.desc}</p>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-3">
+                      <span className={`text-[8px] tracking-wider uppercase font-bold px-2 py-0.5 rounded border ${cardTheme.bgLight} ${cardTheme.text} ${cardTheme.border}`}>
+                        {t.badge}
+                      </span>
+                      {isSelected && <Check className={`w-4 h-4 ${cardTheme.text}`} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Fixed Bottom Dock Navigation (Highly detailed, touch friendly, premium layout) */}
@@ -2379,8 +2759,8 @@ export default function WorkoutPlanner() {
         <div className="max-w-md mx-auto flex items-center justify-around select-none">
           <button
             onClick={() => setActiveTab("routine")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
-              activeTab === "routine" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "routine" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Dumbbell className="w-5 h-5" />
@@ -2389,8 +2769,8 @@ export default function WorkoutPlanner() {
 
           <button
             onClick={() => setActiveTab("volume")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
-              activeTab === "volume" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "volume" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <TrendingUp className="w-5 h-5" />
@@ -2399,8 +2779,8 @@ export default function WorkoutPlanner() {
 
           <button
             onClick={() => setActiveTab("explore")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
-              activeTab === "explore" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "explore" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Sparkles className="w-5 h-5" />
@@ -2409,8 +2789,8 @@ export default function WorkoutPlanner() {
 
           <button
             onClick={() => setActiveTab("logs")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
-              activeTab === "logs" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "logs" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <ClipboardList className="w-5 h-5" />
@@ -2419,8 +2799,8 @@ export default function WorkoutPlanner() {
 
           <button
             onClick={() => setActiveTab("copypaste")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
-              activeTab === "copypaste" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "copypaste" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <FileText className="w-5 h-5" />
@@ -2429,12 +2809,22 @@ export default function WorkoutPlanner() {
 
           <button
             onClick={() => setActiveTab("split")}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2.5 rounded-lg ${
-              activeTab === "split" ? "text-violet-400 font-extrabold scale-110" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "split" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <CalendarDays className="w-5 h-5" />
             <span className="text-[9px] tracking-tight">Split</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("theme")}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg ${
+              activeTab === "theme" ? `${themeStyles.text} font-extrabold scale-110` : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Palette className="w-5 h-5" />
+            <span className="text-[9px] tracking-tight">Theme</span>
           </button>
         </div>
       </div>
@@ -2478,7 +2868,7 @@ export default function WorkoutPlanner() {
                             onClick={() => handleSwap(di, ei, name)}
                             className={`w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition flex justify-between items-center ${
                               name === ex.name
-                                ? "bg-violet-600/15 border-violet-500 text-violet-400"
+                                ? `${themeStyles.bgLight} ${themeStyles.border} ${themeStyles.text}`
                                 : "bg-zinc-900/60 border-zinc-900 text-zinc-300 hover:bg-zinc-900 hover:border-zinc-800"
                             }`}
                           >
@@ -2506,7 +2896,7 @@ export default function WorkoutPlanner() {
                             }}
                             className={`p-3 rounded-xl border text-xs font-bold transition ${
                               ex.method === m
-                                ? "bg-violet-600/15 border-violet-500 text-violet-400"
+                                ? `${themeStyles.bgLight} ${themeStyles.border} ${themeStyles.text}`
                                 : "bg-zinc-900/60 border-zinc-900 text-zinc-400 hover:text-zinc-200"
                             }`}
                           >
@@ -2529,7 +2919,7 @@ export default function WorkoutPlanner() {
                           }}
                           className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
                             ex.method === m
-                              ? "bg-violet-600/15 border-violet-500 text-violet-400"
+                              ? `${themeStyles.bgLight} ${themeStyles.border} ${themeStyles.text}`
                               : "bg-zinc-900/60 border-zinc-900 text-zinc-400 hover:text-zinc-200"
                           }`}
                         >
@@ -2586,7 +2976,7 @@ export default function WorkoutPlanner() {
                       type="text"
                       value={ex.name}
                       onChange={(e) => updEx(di, ei, { name: e.target.value })}
-                      className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500"
+                      className={`w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none ${themeStyles.borderFocus}`}
                     />
                   </div>
 
@@ -2617,7 +3007,7 @@ export default function WorkoutPlanner() {
                       <select
                         value={ex.reps}
                         onChange={(e) => handleRepsChange(e.target.value)}
-                        className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-violet-500"
+                        className={`w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none ${themeStyles.borderFocus}`}
                       >
                         {repPresets.map((r) => (
                           <option key={r} value={r} className="bg-zinc-950">
@@ -2637,7 +3027,7 @@ export default function WorkoutPlanner() {
                           onClick={() => updEx(di, ei, { method: m })}
                           className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
                             ex.method === m
-                              ? "bg-violet-600/15 border-violet-500 text-violet-400"
+                              ? `${themeStyles.bgLight} ${themeStyles.border} ${themeStyles.text}`
                               : "bg-zinc-900/60 border-zinc-900 text-zinc-400 hover:text-zinc-200"
                           }`}
                         >
@@ -2664,7 +3054,7 @@ export default function WorkoutPlanner() {
                             }}
                             className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
                               isSelected
-                                ? "bg-violet-600/15 border-violet-500 text-violet-400"
+                                ? `${themeStyles.bgLight} ${themeStyles.border} ${themeStyles.text}`
                                 : "bg-zinc-900/40 border-zinc-900/60 text-zinc-400 hover:text-zinc-200"
                             }`}
                           >
@@ -2706,7 +3096,7 @@ export default function WorkoutPlanner() {
                         setEditEx(null);
                         showToast(`Moved "${movingEx.name}" to ${targetDay.day} ✓`);
                       }}
-                      className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-violet-500 cursor-pointer"
+                      className={`w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none ${themeStyles.borderFocus} cursor-pointer`}
                     >
                       {plan.map((d, idx) => (
                         <option key={idx} value={idx} className="bg-zinc-950">
@@ -2722,7 +3112,7 @@ export default function WorkoutPlanner() {
                       value={ex.note !== undefined ? ex.note : (exInfo?.note || "")}
                       onChange={(e) => updEx(di, ei, { note: e.target.value })}
                       placeholder="Add instructions, execution tip, or custom setup here..."
-                      className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500 h-28 placeholder-zinc-600"
+                      className={`w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none ${themeStyles.borderFocus} h-28 placeholder-zinc-600`}
                     />
                   </div>
 
@@ -2731,7 +3121,7 @@ export default function WorkoutPlanner() {
                       setEditEx(null);
                       showToast("Saved ✓");
                     }}
-                    className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg mt-2 cursor-pointer"
+                    className={`w-full ${themeStyles.bg} ${themeStyles.bgHover} text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg mt-2 cursor-pointer`}
                   >
                     Close & Apply
                   </button>
@@ -2813,7 +3203,7 @@ export default function WorkoutPlanner() {
                               ns[si] = { ...ns[si], weight: e.target.value };
                               setLogIn({ sets: ns });
                             }}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-violet-500 text-center"
+                            className={`w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none ${themeStyles.borderFocus} text-center`}
                           />
                         </div>
 
@@ -2828,7 +3218,7 @@ export default function WorkoutPlanner() {
                               ns[si] = { ...ns[si], reps: e.target.value };
                               setLogIn({ sets: ns });
                             }}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-violet-500 text-center"
+                            className={`w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none ${themeStyles.borderFocus} text-center`}
                           />
                         </div>
 
@@ -2841,7 +3231,7 @@ export default function WorkoutPlanner() {
                               ns[si] = { ...ns[si], rpe: e.target.value };
                               setLogIn({ sets: ns });
                             }}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-violet-500 text-center cursor-pointer"
+                            className={`w-full bg-zinc-950 border border-zinc-900 rounded-lg p-2 text-xs font-bold text-white focus:outline-none ${themeStyles.borderFocus} text-center cursor-pointer`}
                           >
                             <option value="">None</option>
                             <option value="0 RIR">0 RIR</option>
@@ -2942,7 +3332,7 @@ export default function WorkoutPlanner() {
                     <div className="border-t border-zinc-900 pt-3 flex flex-col gap-2">
                       <button
                         onClick={() => setShowCustomCreate(!showCustomCreate)}
-                        className="w-full py-3 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-xs font-bold text-violet-400 transition"
+                        className={`w-full py-3 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-xs font-bold ${themeStyles.text} transition`}
                       >
                         {showCustomCreate ? "Hide Custom Builder" : "+ Build Completely Custom Exercise"}
                       </button>
@@ -2956,7 +3346,7 @@ export default function WorkoutPlanner() {
                               placeholder="e.g. Reverse Grip Lat Pulldown"
                               value={customExName}
                               onChange={(e) => setCustomExName(e.target.value)}
-                              className="w-full bg-zinc-950 border border-zinc-900 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-violet-500"
+                              className={`w-full bg-zinc-950 border border-zinc-900 rounded-lg px-3 py-2 text-xs focus:outline-none ${themeStyles.borderFocus}`}
                             />
                           </div>
                           <div className="grid grid-cols-2 gap-3">
@@ -2985,7 +3375,7 @@ export default function WorkoutPlanner() {
                                 placeholder="8-10, 12, etc."
                                 value={customExReps}
                                 onChange={(e) => setCustomExReps(e.target.value)}
-                                className="w-full bg-zinc-950 border border-zinc-900 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-violet-500"
+                                className={`w-full bg-zinc-950 border border-zinc-900 rounded-lg px-3 py-2 text-xs focus:outline-none ${themeStyles.borderFocus}`}
                               />
                             </div>
                           </div>
@@ -3016,7 +3406,7 @@ export default function WorkoutPlanner() {
                           <button
                             onClick={handleCreateCustomExercise}
                             disabled={!customExName.trim()}
-                            className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:hover:bg-violet-600 text-white font-bold text-xs shadow-lg transition"
+                            className={`w-full py-2.5 rounded-xl ${themeStyles.bg} ${themeStyles.bgHover} disabled:opacity-40 disabled:hover:${themeStyles.bg} text-white font-bold text-xs shadow-lg transition`}
                           >
                             Add Custom Exercise ✓
                           </button>
@@ -3051,7 +3441,7 @@ export default function WorkoutPlanner() {
                           className="bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 rounded-2xl p-4 cursor-pointer transition flex justify-between items-start gap-4 shadow-sm group"
                         >
                           <div className="space-y-1 flex-1 min-w-0">
-                            <h4 className="text-xs md:text-sm font-bold text-white leading-tight group-hover:text-violet-400 transition">
+                            <h4 className={`text-xs md:text-sm font-bold text-white leading-tight transition group-hover:${themeStyles.text}`}>
                               {ex.name}
                             </h4>
                             <div className="flex items-center gap-2">
@@ -3258,25 +3648,25 @@ export default function WorkoutPlanner() {
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
-      {/* COPY / PASTE MODAL */}
-      <AnimatePresence>
-        {showTextEditor && (
-          <div
-            onClick={(e) => e.target === e.currentTarget && setShowTextEditor(false)}
-            className="fixed inset-0 bg-black/70 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              className="bg-zinc-950 border border-zinc-900 rounded-t-3xl sm:rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col space-y-5"
+        {/* COPY / PASTE MODAL */}
+        <AnimatePresence>
+          {showTextEditor && (
+            <div
+              onClick={(e) => e.target === e.currentTarget && setShowTextEditor(false)}
+              className="fixed inset-0 bg-black/70 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm"
             >
-              <div className="flex justify-between items-center">
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="bg-zinc-950 border border-zinc-900 rounded-t-3xl sm:rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col space-y-5"
+              >
+                <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-violet-400" />
+                  <FileText className={`w-5 h-5 ${themeStyles.text}`} />
                   <h3 className="text-base font-bold text-white">Copy & Paste Routine</h3>
                 </div>
                 <button
@@ -3303,7 +3693,7 @@ export default function WorkoutPlanner() {
                     showToast("Routine copied to clipboard ✓");
                     setTimeout(() => setCopied(false), 2000);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 hover:text-violet-300 transition text-[11px] font-bold cursor-pointer border border-violet-500/15"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${themeStyles.bgLight} ${themeStyles.bgLightHover} ${themeStyles.text} ${themeStyles.textHover} transition text-[11px] font-bold cursor-pointer border ${themeStyles.borderLight15}`}
                 >
                   {copied ? (
                     <>
@@ -3336,14 +3726,14 @@ export default function WorkoutPlanner() {
                     setParseError("");
                   }}
                   placeholder="Paste a valid routine or start writing here..."
-                  className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 font-mono h-[320px] resize-none focus:ring-1 focus:ring-violet-500/30"
+                  className={`w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none ${themeStyles.borderFocus} font-mono h-[320px] resize-none focus:ring-1 ${themeStyles.borderFocusRing}`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={() => setShowTextEditor(false)}
-                  className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white font-bold text-xs transition border border-zinc-800/40 cursor-pointer"
+                  className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white font-bold text-xs transition border border-zinc-800/40 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -3363,7 +3753,7 @@ export default function WorkoutPlanner() {
                       setParseError(err?.message || "An unexpected error occurred while parsing the text.");
                     }
                   }}
-                  className="py-3 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition shadow-lg shadow-violet-500/10 cursor-pointer"
+                  className={`py-3 px-4 rounded-xl ${themeStyles.bg} ${themeStyles.bgHover} text-white font-bold text-xs transition shadow-lg ${themeStyles.shadowGlow} cursor-pointer`}
                 >
                   Save & Apply Changes
                 </button>
