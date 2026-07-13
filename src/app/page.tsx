@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Sparkles,
   Info,
-  CalendarDays
+  CalendarDays,
+  Copy,
+  FileText
 } from "lucide-react";
 
 // ─── CONSTANTS & DATABASES ──────────────────────────────────────────────────
@@ -684,6 +686,214 @@ function ReorderableExerciseItem({
   );
 }
 
+function resolveDayAbbreviation(dayStr: string): string | null {
+  const normalized = dayStr.trim().toLowerCase();
+  if (normalized.startsWith("sat")) return "Sat";
+  if (normalized.startsWith("sun")) return "Sun";
+  if (normalized.startsWith("mon")) return "Mon";
+  if (normalized.startsWith("tue")) return "Tue";
+  if (normalized.startsWith("wed")) return "Wed";
+  if (normalized.startsWith("thu")) return "Thu";
+  if (normalized.startsWith("fri")) return "Fri";
+  return null;
+}
+
+function serializePlanToText(plan: any[]): string {
+  return plan.map((d) => {
+    let dayText = `=== Day: ${d.day} | Label: ${d.label} ===\n`;
+    if (d.focus) {
+      dayText += `Focus: ${d.focus}\n`;
+    }
+    const exercisesText = (d.exercises || []).map((ex: any) => {
+      let line = `- ${ex.name} (${ex.sets} sets x ${ex.reps} reps)`;
+      const meta: string[] = [];
+      if (ex.method) meta.push(`Method: ${ex.method}`);
+      if (ex.group) meta.push(`Group: ${ex.group}`);
+      if (meta.length > 0) {
+        line += ` [${meta.join(" | ")}]`;
+      }
+      if (ex.note) {
+        line += `\n  Note: ${ex.note}`;
+      }
+      return line;
+    }).join("\n");
+    return dayText + (exercisesText ? exercisesText + "\n" : "") + "\n";
+  }).join("\n").trim();
+}
+
+function parseTextToPlan(text: string): any[] {
+  const lines = text.split("\n");
+  const parsedPlan: any[] = [];
+  let currentDay: any = null;
+  let currentExercise: any = null;
+  let exerciseIdCounter = 1;
+
+  for (let idx = 0; idx < lines.length; idx++) {
+    let line = lines[idx].trim();
+    if (!line) continue;
+
+    // Check if it's a day header: starts with "===" or contains "Day:"
+    if (line.includes("===") || line.toLowerCase().startsWith("day:") || line.toLowerCase().includes("| label:")) {
+      // Parse day code (e.g. Sat, Sun, Mon, etc.)
+      const dayMatch = line.match(/Day:\s*([A-Za-z]{3,10})/i);
+      const labelMatch = line.match(/Label:\s*([^=|]*)/i);
+      
+      if (dayMatch) {
+        // If there was a previous exercise and day, push the exercise
+        if (currentExercise && currentDay) {
+          currentDay.exercises.push(currentExercise);
+          currentExercise = null;
+        }
+
+        const rawDay = dayMatch[1];
+        const dayCode = resolveDayAbbreviation(rawDay);
+        if (!dayCode) {
+          throw new Error(`Line ${idx + 1}: Invalid day "${rawDay}". Day must be Sat, Sun, Mon, Tue, Wed, Thu, or Fri.`);
+        }
+
+        // Check if day is already defined to avoid duplicates
+        if (parsedPlan.some((d) => d.day === dayCode)) {
+          throw new Error(`Line ${idx + 1}: Duplicate day "${dayCode}". Each training day should only appear once.`);
+        }
+        
+        const colors = ["#E8533F", "#3F7DE8", "#2EAD6B", "#9B3FE8", "#E8A63F", "#E83F7D", "#3FE8C8"];
+        const accents = ["#ff6b54", "#5490ff", "#3dc97d", "#b55fff", "#f5b94e", "#ff5490", "#4ffff0"];
+        const ci = parsedPlan.length % colors.length;
+
+        currentDay = {
+          day: dayCode,
+          label: labelMatch ? labelMatch[1].trim() : "Workout",
+          focus: "",
+          color: colors[ci],
+          accent: accents[ci],
+          exercises: []
+        };
+        parsedPlan.push(currentDay);
+        continue;
+      }
+    }
+
+    if (!currentDay) {
+      // Skip lines before any Day is defined
+      continue;
+    }
+
+    // Check if it's Focus:
+    if (line.toLowerCase().startsWith("focus:")) {
+      currentDay.focus = line.substring(6).trim();
+      continue;
+    }
+
+    // Check if it's Note: / Tip: / Note / Tip
+    if (line.toLowerCase().startsWith("note:") || line.toLowerCase().startsWith("tip:")) {
+      const noteContent = line.replace(/^(note|tip):\s*/i, "").trim();
+      if (currentExercise) {
+        currentExercise.note = noteContent;
+      } else if (currentDay.exercises.length > 0) {
+        currentDay.exercises[currentDay.exercises.length - 1].note = noteContent;
+      }
+      continue;
+    }
+
+    // Otherwise, check if it starts with an exercise marker like `-` or a number `1.`
+    if (line.startsWith("-") || line.match(/^\d+[\.\)]/)) {
+      if (currentExercise && currentDay) {
+        currentDay.exercises.push(currentExercise);
+        currentExercise = null;
+      }
+
+      // Clean the line marker
+      const cleanLine = line.replace(/^-\s*/, "").replace(/^\d+[\.\)]\s*/, "").trim();
+
+      // Extract Name, sets/reps, and metadata
+      let name = cleanLine;
+      let sets = 3;
+      let reps = "10–12";
+      let method = "Dumbbell";
+      let group = "General";
+
+      // Match (sets x reps) or (X sets, Y reps) or (X sets) or similar
+      const parenMatch = cleanLine.match(/\(([^)]+)\)/);
+      if (parenMatch) {
+        const parenContent = parenMatch[1];
+        // Remove the parenthesis part from the name
+        name = name.replace(parenMatch[0], "").trim();
+
+        if (parenContent.toLowerCase().includes("x")) {
+          const parts = parenContent.split(/x/i);
+          const setsNum = parseInt(parts[0].replace(/sets?/i, "").trim(), 10);
+          if (!isNaN(setsNum)) sets = setsNum;
+          reps = parts[1].replace(/reps?/i, "").trim();
+        } else {
+          // Fallback parsing
+          const setsMatch = parenContent.match(/(\d+)\s*sets?/i);
+          if (setsMatch) {
+            sets = parseInt(setsMatch[1], 10);
+          }
+          const repsMatch = parenContent.match(/(\d+(?:\s*[-–]\s*\d+|\+?))\s*(?:reps?)?/i);
+          if (repsMatch) {
+            reps = repsMatch[1].trim();
+          }
+        }
+      }
+
+      // Match metadata [Method: X | Group: Y]
+      const bracketMatch = name.match(/\[([^\]]+)\]/);
+      if (bracketMatch) {
+        const bracketContent = bracketMatch[1];
+        name = name.replace(bracketMatch[0], "").trim();
+
+        const methodMatch = bracketContent.match(/Method:\s*([^|\]]+)/i);
+        if (methodMatch) {
+          method = methodMatch[1].trim();
+        }
+
+        const groupMatch = bracketContent.match(/Group:\s*([^|\]]+)/i);
+        if (groupMatch) {
+          group = groupMatch[1].trim();
+        }
+      }
+
+      // Final clean name
+      name = name.trim();
+
+      currentExercise = {
+        id: exerciseIdCounter++,
+        name,
+        group: group || findGroupForExercise(name),
+        method,
+        sets,
+        reps,
+        note: ""
+      };
+    } else {
+      // If a line is not a day, not a focus, not an explicit note, and not an explicit exercise bullet,
+      // it could be a continuing note/tip for the current exercise, or we can treat it as an exercise name if currentExercise is empty!
+      if (currentExercise) {
+        currentExercise.note = (currentExercise.note ? currentExercise.note + "\n" : "") + line;
+      } else if (currentDay) {
+        // Let's treat it as an exercise name
+        currentExercise = {
+          id: exerciseIdCounter++,
+          name: line,
+          group: findGroupForExercise(line),
+          method: "Dumbbell",
+          sets: 3,
+          reps: "10–12",
+          note: ""
+        };
+      }
+    }
+  }
+
+  // Push the final exercise
+  if (currentExercise && currentDay) {
+    currentDay.exercises.push(currentExercise);
+  }
+
+  return parsedPlan;
+}
+
 export default function WorkoutPlanner() {
   const [mounted, setMounted] = useState(false);
   const [plan, setPlan] = useState<any[]>([]);
@@ -692,6 +902,11 @@ export default function WorkoutPlanner() {
   const [activeDay, setActiveDay] = useState(0);
   const [screen, setScreen] = useState<"workout" | "progress">("workout");
   const [toast, setToast] = useState("");
+
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [rawText, setRawText] = useState("");
+  const [parseError, setParseError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // Modals
   const [swapEx, setSwapEx] = useState<{ di: number; ei: number } | null>(null);
@@ -1110,15 +1325,27 @@ export default function WorkoutPlanner() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => {
+                setRawText(serializePlanToText(plan));
+                setParseError("");
+                setShowTextEditor(true);
+                setCopied(false);
+              }}
+              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white transition-all border border-zinc-800/60 shadow-lg cursor-pointer"
+              title="Copy / Paste Routine"
+            >
+              <FileText className="w-5 h-5" />
+            </button>
+            <button
               onClick={() => setDayModal(true)}
-              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white transition-all border border-zinc-800/60 shadow-lg"
+              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white transition-all border border-zinc-800/60 shadow-lg cursor-pointer"
               title="Manage Days"
             >
               <CalendarDays className="w-5 h-5" />
             </button>
             <button
               onClick={() => setScreen((s) => (s === "workout" ? "progress" : "workout"))}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg border ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer border ${
                 screen === "progress"
                   ? "bg-violet-600 hover:bg-violet-500 text-white border-violet-500"
                   : "bg-zinc-900 hover:bg-zinc-800/80 text-zinc-300 hover:text-white border-zinc-800/60"
@@ -2254,6 +2481,118 @@ export default function WorkoutPlanner() {
                     </div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* COPY / PASTE MODAL */}
+      <AnimatePresence>
+        {showTextEditor && (
+          <div
+            onClick={(e) => e.target === e.currentTarget && setShowTextEditor(false)}
+            className="fixed inset-0 bg-black/70 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="bg-zinc-950 border border-zinc-900 rounded-t-3xl sm:rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col space-y-5"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-violet-400" />
+                  <h3 className="text-base font-bold text-white">Copy & Paste Routine</h3>
+                </div>
+                <button
+                  onClick={() => setShowTextEditor(false)}
+                  className="p-1 rounded-lg bg-zinc-900 text-zinc-500 hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Copy your entire workout routine as text to back it up or share it. 
+                You can also edit the text below or paste a new routine to update the app instantly!
+              </p>
+
+              <div className="flex justify-between items-center bg-zinc-900/40 border border-zinc-900 px-4 py-2.5 rounded-xl">
+                <span className="text-[10px] tracking-wider uppercase font-bold text-zinc-500">
+                  Routine Text Format
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(rawText);
+                    setCopied(true);
+                    showToast("Routine copied to clipboard ✓");
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 hover:text-violet-300 transition text-[11px] font-bold cursor-pointer border border-violet-500/15"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy All</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {parseError && (
+                <div className="bg-red-500/5 border border-red-500/15 text-red-400 text-xs px-4 py-3 rounded-xl flex items-start gap-2.5 leading-relaxed">
+                  <span className="font-extrabold select-none mt-0.5">⚠️</span>
+                  <div>
+                    <span className="font-bold">Parsing Error:</span> {parseError}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5 flex-1 flex flex-col">
+                <textarea
+                  value={rawText}
+                  onChange={(e) => {
+                    setRawText(e.target.value);
+                    setParseError("");
+                  }}
+                  placeholder="Paste a valid routine or start writing here..."
+                  className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 font-mono h-[320px] resize-none focus:ring-1 focus:ring-violet-500/30"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={() => setShowTextEditor(false)}
+                  className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 text-zinc-400 hover:text-white font-bold text-xs transition border border-zinc-800/40 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    try {
+                      const newPlan = parseTextToPlan(rawText);
+                      if (newPlan.length === 0) {
+                        setParseError("Could not find any workout days in the text. Make sure you have at least one day formatted like: === Day: Sat | Label: Pull ===");
+                        return;
+                      }
+                      updatePlan(newPlan);
+                      setActiveDay(0);
+                      setShowTextEditor(false);
+                      showToast("Workout routine updated successfully ✓");
+                    } catch (err: any) {
+                      setParseError(err?.message || "An unexpected error occurred while parsing the text.");
+                    }
+                  }}
+                  className="py-3 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition shadow-lg shadow-violet-500/10 cursor-pointer"
+                >
+                  Save & Apply Changes
+                </button>
               </div>
             </motion.div>
           </div>
